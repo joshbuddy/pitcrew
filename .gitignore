@@ -1,0 +1,7 @@
+/env
+*.pyc
+/tasks
+__pycache__
+/state.yml
+.DS_Store
+/crew/tasks/private

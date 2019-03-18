@@ -1,0 +1,38 @@
+## {{ task.task_name }}
+
+{% if desc -%}
+{{ desc }}
+{%- else -%}
+⚠️ *No task description set*
+{%- endif %}
+
+{% if task.args -%}
+### Arguments
+
+{% for arg in task.args %}
+- {{ arg.name }} *({{ arg.type.__name__}})* {% if arg.desc -%}
+       : {{ arg.desc }}
+    {%- else -%}
+        : ⚠️ *no description*
+    {%- endif -%}
+{%- endfor %}
+{%- endif %}
+
+{% if task.has_return_type() %}
+### Returns
+
+*({{ task.expected_return_type().__name__ }})* {% if task.return_desc -%}
+    {{ task.return_desc }}
+{%- else -%}
+    ⚠️ *No task return value description set*
+{%- endif %}
+{% endif %}
+
+<details>
+<summary>Show source</summary>
+
+```python
+{{ task.source() }}
+```
+
+</details>
