@@ -1,5 +1,4 @@
 import inspect
-import sys
 import os
 import importlib.util
 from crew import task
@@ -38,6 +37,7 @@ class Package:
 class Loader:
     def __init__(self):
         self.tasks = {}
+        self.task_dir = os.path.abspath(os.path.join(__file__, "..", "tasks"))
 
     def load(self, name, context):
         return self.create_task(name, context)
@@ -46,12 +46,12 @@ class Loader:
         return Package(self, context, name)
 
     def has_package(self, name):
-        for p in sys.path:
-            if os.path.isfile(os.path.join(p, "crew", "tasks", name) + ".py"):
-                return True
-            elif os.path.isdir(os.path.join(p, "crew", "tasks", name)):
-                return True
-        return False
+        if os.path.isfile(os.path.join(self.task_dir, name) + ".py"):
+            return True
+        elif os.path.isdir(os.path.join(self.task_dir, name)):
+            return True
+        else:
+            return False
 
     def create_task(self, task_name, context):
         self.populate_task(task_name)
@@ -61,25 +61,22 @@ class Loader:
         return task
 
     def each_task(self, prefix=[]):
-        for p in sys.path:
-            task_path = os.path.join(p, "tasks", *prefix)
-            dir_path = os.path.join(p, "tasks", *prefix)
-
-            if os.path.isfile(task_path) and task_path.endswith(".py"):
-                if prefix[-1] == "__init__.py":
-                    prefix.pop()
-                else:
-                    prefix[-1] = os.path.splitext(prefix[-1])[0]
-                yield self.populate_task(".".join(prefix))
-            elif os.path.isdir(dir_path):
-                paths = os.listdir(dir_path)
-                paths.sort()
-                for p in paths:
-                    if p == "__pycache__":
-                        continue
-                    new_prefix = prefix + [p]
-                    for t in self.each_task(new_prefix):
-                        yield t
+        path = os.path.join(self.task_dir, *prefix)
+        if os.path.isfile(path) and path.endswith(".py"):
+            if prefix[-1] == "__init__.py":
+                prefix.pop()
+            else:
+                prefix[-1] = os.path.splitext(prefix[-1])[0]
+            yield self.populate_task(".".join(prefix))
+        elif os.path.isdir(path):
+            paths = os.listdir(path)
+            paths.sort()
+            for p in paths:
+                if p.startswith("__"):
+                    continue
+                new_prefix = prefix + [p]
+                for t in self.each_task(new_prefix):
+                    yield t
 
     def populate_task(self, task_name):
         try:

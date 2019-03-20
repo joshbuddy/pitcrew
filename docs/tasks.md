@@ -33,7 +33,6 @@ class AptgetInstall(task.BaseTask):
     async def verify(self) -> str:
         policy_output = await self.sh(f"apt-cache policy {self.params.esc_name}")
         m = re.search("Installed: (.*?)\n", policy_output)
-        print(policy_output)
         assert m, "no version found"
         installed_version = m.group(1)
         assert installed_version != "(none)", "Installed version is (none)"
@@ -111,7 +110,6 @@ Installs crew in the path specified
 
 ```python
 from crew import task
-from crew.logger import logger
 
 
 @task.opt("dest", desc="The directory to install crew in", type=str, default="crew")
@@ -127,8 +125,9 @@ class CrewInstall(task.BaseTask):
             await self.install.xcode_cli()
             await self.install.homebrew()
             await self.install("git")
-            # await self.git.clone("https://github.com/joshbuddy/crew_py.git", self.params.dest)
-            await self.git.clone("git@github.com:joshbuddy/crew.git", self.params.dest)
+            await self.git.clone(
+                "https://github.com/joshbuddy/crew.git", self.params.dest
+            )
             with self.cd(self.params.dest):
                 await self.homebrew.install("python3")
                 await self.sh("python3 -m venv --clear env")
@@ -136,10 +135,12 @@ class CrewInstall(task.BaseTask):
         elif await self.facts.system.uname() == "linux":
             await self.apt_get.update()
             await self.apt_get.install("git")
-            # await self.git.clone("git@github.com:joshbuddy/crew.git", self.params.dest)
+            await self.apt_get.install("python3.6")
+            await self.apt_get.install("python3-venv")
+            await self.git.clone(
+                "https://github.com/joshbuddy/crew.git", self.params.dest
+            )
             with self.cd(self.params.dest):
-                await self.apt_get.install("python3.6")
-                await self.apt_get.install("python3-venv")
                 await self.sh("python3.6 --version")
                 await self.sh("python3.6 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
@@ -151,8 +152,7 @@ class CrewInstallTest(task.TaskTest):
     @task.TaskTest.ubuntu
     async def test_ubuntu(self):
         with self.cd("/tmp"):
-            await self.local_context.file(".").copy_to(self.file("crew"))
-            await self.crew.install(dest="crew")
+            await self.crew.install()
 
 ```
 
@@ -247,7 +247,7 @@ class DockerStop(task.BaseTask):
 
     async def run(self):
         command = "docker stop"
-        if self.params.time != None:
+        if self.params.time is not None:
             command += f" -t {self.params.time}"
         command += f" {self.params.esc_container_id}"
         await self.sh(command)
@@ -303,7 +303,6 @@ Changes the file mode of the specified path
 <summary>Show source</summary>
 
 ```python
-import base64
 from crew import task
 
 
@@ -348,7 +347,6 @@ Changes the file mode of the specified path
 <summary>Show source</summary>
 
 ```python
-import base64
 from crew import task
 
 
@@ -364,6 +362,59 @@ class FsChown(task.BaseTask):
         if self.params.group:
             owner_str += f":{self.params.group}"
         return await self.sh(f"chown {self.esc(owner_str)} {self.params.esc_path}")
+
+```
+
+</details>
+
+## fs.digests.md5
+
+Gets md5 digest of path
+
+### Arguments
+
+
+- path *(str)* : The path of the file to digest
+
+
+### Returns
+
+*(str)* The md5 digest in hexadecimal
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+import hashlib
+from crew import task
+
+
+@task.arg("path", desc="The path of the file to digest", type=str)
+@task.returns("The md5 digest in hexadecimal")
+class FsDigestsMd5(task.BaseTask):
+    """Gets md5 digest of path"""
+
+    async def run(self) -> str:
+        platform = await self.facts.system.uname()
+        if platform == "darwin":
+            out = await self.sh(f"md5 {self.params.esc_path}")
+            return out.strip().split(" ")[-1]
+        elif platform == "linux":
+            out = await self.sh(f"md5sum {self.params.esc_path}")
+            return out.split(" ")[0]
+        else:
+            raise Exception("not supported")
+
+
+class FsDigestsMd5Test(task.TaskTest):
+    @task.TaskTest.ubuntu
+    async def test_ubuntu(self):
+        content = b"Some delicious bytes"
+        await self.fs.write("/tmp/some-file", content)
+        expected_digest = hashlib.md5(content).hexdigest()
+        actual_digest = await self.fs.digests.md5("/tmp/some-file")
+        assert expected_digest == actual_digest, "digests are not equal"
 
 ```
 
@@ -511,7 +562,6 @@ Read value of path into bytes
 <summary>Show source</summary>
 
 ```python
-import base64
 from crew import task
 
 
@@ -627,7 +677,6 @@ Touches a file
 <summary>Show source</summary>
 
 ```python
-import base64
 from crew import task
 
 
@@ -721,8 +770,7 @@ homebrew or apt-get.
         git_config = await self.fs.read(
             os.path.join(self.params.destination, ".git", "config")
         )
-        # TODO search git config for origin
-        # git_config['url'] = url
+        assert self.params.url in git_config.decode()
 
     async def run(self):
         command = f"git clone {self.params.esc_url} {self.params.esc_destination}"
@@ -776,53 +824,6 @@ class HomebrewInstall(task.BaseTask):
     async def available(self) -> bool:
         code, _, _ = await self.sh_with_code("which brew")
         return code == 0
-
-```
-
-</details>
-
-## install
-
-Installs a package, optionally allowing the version number to specified.
-
-This task defers exection to package-manager specific installation tasks, such as
-homebrew or apt-get.
-    
-
-### Arguments
-
-
-- name *(str)* : The name of the package to install
-
-
-### Returns
-
-*(str)* The version of the package installed
-
-
-<details>
-<summary>Show source</summary>
-
-```python
-from crew import task
-
-
-@task.arg("name", desc="The name of the package to install", type=str)
-@task.returns("The version of the package installed")
-class Install(task.BaseTask):
-    """Installs a package, optionally allowing the version number to specified.
-
-This task defers exection to package-manager specific installation tasks, such as
-homebrew or apt-get.
-    """
-
-    async def run(self) -> str:
-        installer_tasks = [self.homebrew.install, self.apt_get.install]
-        for pkg in installer_tasks:
-            task = pkg.task()
-            if await task.available():
-                return await task.invoke(name=self.params.name)
-        raise Exception("cannot find a package manager to defer to")
 
 ```
 

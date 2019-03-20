@@ -1,3 +1,4 @@
+import sys
 import asyncio
 import click
 import argparse
@@ -37,15 +38,18 @@ def run(ctx, *, task_name, extra_args):
 
             parsed_task_args = parser.parse_args(extra_args)
             dict_args = vars(parsed_task_args)
-            print(f"Invoking \033[1m{task_name}\033[0m with \033[1m{dict_args}\033[0m")
+            sys.stderr.write(
+                f"Invoking \033[1m{task_name}\033[0m with \033[1m{dict_args}\033[0m\n"
+            )
             out = await task.invoke(**dict_args)
             if out:
-                print(f"Got \033[1m{out}\033[0m")
-            print(f" 🔧🔧🔧 Done! 🔧🔧🔧")
+                sys.stderr.write("Result:\n")
+                sys.stdout.buffer.write(out)
+                sys.stdout.flush()
+            sys.stderr.write(f"\n 🔧🔧🔧 Done! 🔧🔧🔧\n")
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_task())
-    loop.close()
 
 
 @cli.command(short_help="list all tasks")
@@ -76,6 +80,10 @@ def info(ctx, *, task_name):
     for arg in task.args:
         print(f"{arg.name} ({arg.type.__name__}): {arg.desc}")
 
+    if task.has_return_type():
+        print("\033[1mReturns\033[0m")
+        print(f"{task.expected_return_type().__name__}: {task.return_desc}")
+
 
 @cli.command(short_help="generate docs")
 @click.pass_context
@@ -91,11 +99,22 @@ def docs(ctx):
 @click.argument("task_prefix", nargs=-1)
 @click.pass_context
 def test(ctx, task_prefix):
-    test_runner = App().test_runner()
+    async def run_tests():
+        async with App() as app:
+            await app.test_runner().run(task_prefix)
+
     loop = asyncio.get_event_loop()
-    loop.run_until_complete(test_runner.run(task_prefix))
-    loop.close()
+    loop.run_until_complete(run_tests())
     print(f"Tests complete")
+
+
+@cli.command(short_help="create a new task")
+@click.argument("task_name")
+@click.pass_context
+def new(ctx, task_name):
+    app = App()
+    app.create_task(task_name)
+    print(f"Task created!")
 
 
 @cli.command(short_help="show help")

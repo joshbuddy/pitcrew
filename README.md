@@ -2,6 +2,8 @@
 
 AsyncIO-powered python DSL for doing things to systems locally, on docker, or over ssh.
 
+[![CircleCI](https://circleci.com/gh/joshbuddy/crew.svg?style=svg)](https://circleci.com/gh/joshbuddy/crew)
+
 Crew does this through two concepts *tasks* and *contexts*.
 
 A *task* can perform any system operation by calling other tasks or invoking a command on a shell.
@@ -56,6 +58,10 @@ Shows information for a single task.
 ### `bin/crew run [task-name] <args>`
 
 Runs a task.
+
+### `bin/crew test <task-prefix>`
+
+Run task tests, optionally specifying a task prefix.
 
 ### `bin/crew docs`
 

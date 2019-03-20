@@ -61,13 +61,13 @@ jobs:
           name: check formatting
           command: |
             . venv/bin/activate
-            black --check crew
+            black --check crew tests
 
       - run:
           name: check flake
           command: |
             . venv/bin/activate
-            flake8 crew/**/*.py --ignore=E501,W503
+            flake8 tests/**/*.py crew/**/*.py --ignore=E501,W503
 
       - store_artifacts:
           path: test-reports

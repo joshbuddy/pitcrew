@@ -9,9 +9,7 @@ class Docs:
     def generate(self):
         path = os.path.realpath(os.path.join(__file__, "..", "templates"))
         templateLoader = jinja2.FileSystemLoader(searchpath=path)
-        templateEnv = jinja2.Environment(
-            loader=templateLoader, extensions=["jinja2_highlight.HighlightExtension"]
-        )
+        templateEnv = jinja2.Environment(loader=templateLoader)
         template = templateEnv.get_template("task.md.j2")
         tasks = []
         for task in self.app.loader.each_task():

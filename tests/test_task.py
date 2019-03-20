@@ -1,6 +1,7 @@
 from crew import task
 import aiounittest
 
+
 class TestTask(aiounittest.AsyncTestCase):
     async def test_normal_arg(self):
         @task.arg("normal")
@@ -41,7 +42,7 @@ class TestTask(aiounittest.AsyncTestCase):
         @task.opt("optional")
         class Task(task.BaseTask):
             async def run(self):
-                assert self.params.optional == None
+                assert self.params.optional is None
 
         task_instance = Task()
         await task_instance.invoke()

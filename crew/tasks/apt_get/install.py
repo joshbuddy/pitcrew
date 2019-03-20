@@ -11,7 +11,6 @@ class AptgetInstall(task.BaseTask):
     async def verify(self) -> str:
         policy_output = await self.sh(f"apt-cache policy {self.params.esc_name}")
         m = re.search("Installed: (.*?)\n", policy_output)
-        print(policy_output)
         assert m, "no version found"
         installed_version = m.group(1)
         assert installed_version != "(none)", "Installed version is (none)"
