@@ -149,7 +149,7 @@ class BaseTask(ABC):
     def __getattr__(self, name):
         return getattr(self.context, name)
 
-    def process_args(self, *incoming_args, **incoming_kwargs):
+    def _process_args(self, *incoming_args, **incoming_kwargs):
         incoming_args = list(incoming_args)
         params = self.__class__.arg_struct()
         for arg in self.args:
@@ -174,7 +174,7 @@ class BaseTask(ABC):
 
         self.params = params
 
-    def enforce_return_type(self, value):
+    def _enforce_return_type(self, value):
         expected_return_type = self.__class__.expected_return_type()
         if expected_return_type == inspect.Signature.empty and not value:
             self.return_value = value
@@ -204,35 +204,32 @@ class BaseTask(ABC):
         pass
 
     async def invoke(self, *args, **kwargs):
-        self.process_args(*args, **kwargs)
+        self._process_args(*args, **kwargs)
 
         if self.__class__.memoize and self.__class__ in self.context.cache:
             return self.context.cache[self.__class__]
 
         with logger.with_task(self):
             if hasattr(self, "verify"):
-                return await self.invoke_with_verify()
+                return await self._invoke_with_verify()
             else:
-                return await self.invoke_without_verify()
+                return await self._invoke_without_verify()
 
-    async def invoke_with_verify(self):
+    async def _invoke_with_verify(self):
         try:
-            return self.enforce_return_type(await self.verify())
+            return self._enforce_return_type(await self.verify())
         except AssertionError:
             await self.run()
             try:
-                return self.enforce_return_type(await self.verify())
+                return self._enforce_return_type(await self.verify())
             except AssertionError:
                 raise TaskFailureError("this task failed to run")
 
-    async def invoke_without_verify(self):
-        return self.enforce_return_type(await self.run())
+    async def _invoke_without_verify(self):
+        return self._enforce_return_type(await self.run())
 
     def state_variable(self, *selector):
         return TaskStateVariable(self, selector)
-
-    def assert_equals(self, expected, actual):
-        assert expected == actual, f"got {actual}, expected {expected}"
 
     def template(self, name):
         template_path = os.path.abspath(

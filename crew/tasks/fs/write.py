@@ -10,10 +10,10 @@ class FsWrite(task.BaseTask):
 
     async def verify(self):
         stat = await self.fs.stat(self.params.path)
-        self.assert_equals(len(self.params.content), stat.size)
+        assert len(self.params.content) == stat.size
         expected_digest = hashlib.sha256(self.params.content).hexdigest()
         actual_digest = await self.fs.digests.sha256(self.params.path)
-        self.assert_equals(actual_digest, expected_digest)
+        assert actual_digest == expected_digest
 
     async def run(self):
         await self.sh(
