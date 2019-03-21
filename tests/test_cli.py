@@ -1,4 +1,7 @@
+import base64
 import os
+import getpass
+import json
 from click.testing import CliRunner
 import unittest
 from crew.cli import cli
@@ -54,9 +57,19 @@ class TestCli(unittest.TestCase):
         result = runner.invoke(cli, ["run", "fs.read", "requirements.txt"])
         self.assertEqual(result.exit_code, 0)
 
-        with open("requirements.txt", "rb") as fh:
-            contents = fh.read()
-            self.assertEqual(result.stdout_bytes, contents)
+        with open("requirements.txt", "r") as fh:
+            expected_output = json.dumps({f"{getpass.getuser()}@local": fh.read()})
+            self.assertEqual(result.stdout_bytes.decode(), expected_output)
+
+    def test_run_with_binary(self):
+        base64_data = "CUGhip285YEjnHE4Cel0/lA5OLPV5gEsuEGMEfR7"
+        with open("test_data", "wb") as fh:
+            fh.write(base64.b64decode(base64_data))
+        runner = CliRunner(mix_stderr=False)
+        result = runner.invoke(cli, ["run", "fs.read", "test_data"])
+        self.assertEqual(result.exit_code, 0)
+        expected_output = json.dumps({f"{getpass.getuser()}@local": base64_data})
+        self.assertEqual(result.stdout_bytes.decode(), expected_output)
 
     def test_test(self):
         runner = CliRunner()

@@ -203,6 +203,10 @@ class BaseTask(ABC):
     async def run(self):
         pass
 
+    async def invoke_with_context(self, context, *args, **kwargs):
+        self.context = context
+        return await self.invoke(*args, **kwargs)
+
     async def invoke(self, *args, **kwargs):
         self._process_args(*args, **kwargs)
 

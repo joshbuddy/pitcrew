@@ -1,7 +1,10 @@
+import json
 import sys
 import asyncio
 import click
 import argparse
+import base64
+from typing import Tuple, Dict
 from crew.app import App
 
 
@@ -22,13 +25,13 @@ def cli(ctx):
 )
 @click.argument("task_name")
 @click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
+@click.option("--provider", default="providers.local()")
 @click.pass_context
-def run(ctx, *, task_name, extra_args):
+def run(ctx, *, provider, task_name, extra_args):
     async def run_task():
         async with App() as app:
             task = app.load(task_name)
             task.coerce_inputs(True)
-
             parser = argparse.ArgumentParser(description=task.__doc__)
             for arg in task.args:
                 if arg.required:
@@ -39,13 +42,43 @@ def run(ctx, *, task_name, extra_args):
             parsed_task_args = parser.parse_args(extra_args)
             dict_args = vars(parsed_task_args)
             sys.stderr.write(
-                f"Invoking \033[1m{task_name}\033[0m with \033[1m{dict_args}\033[0m\n"
+                f"Invoking \033[1m{task_name}\033[0m \033[1m{dict_args}\033[0m with provider \033[1m{provider}\033[0m\n"
             )
-            out = await task.invoke(**dict_args)
-            if out:
+
+            async def provider_fn(self) -> Tuple[Dict, Dict]:
+                results = {}
+                failures = {}
+                generator = await eval(f"self.{provider}")
+                async for context in generator:
+                    results[context.descriptor()] = await task.invoke_with_context(
+                        context, **dict_args
+                    )
+                return results, failures
+
+            class OutputEncoder(json.JSONEncoder):
+                def default(self, obj):
+                    if isinstance(obj, bytes):
+                        try:
+                            return obj.decode("utf-8", "strict")
+                        except UnicodeDecodeError:
+                            return base64.b64encode(obj)
+                    else:
+                        return json.JSONEncoder.default(self, obj)
+
+            results, failures = await app.local_context.invoke(provider_fn)
+            if results:
                 sys.stderr.write("Result:\n")
-                sys.stdout.buffer.write(out)
+                sys.stdout.write(json.dumps(results, cls=OutputEncoder))
                 sys.stdout.flush()
+                sys.stderr.write("\n")
+            if failures:
+                sys.stderr.write("Failures:\n")
+                sys.stderr.write(str(failures))
+                sys.stderr.write("\n")
+                sys.stderr.flush()
+            sys.stderr.write(
+                f"\nSummary (results={len(results)} failures={len(failures)})"
+            )
             sys.stderr.write(f"\n 🔧🔧🔧 Done! 🔧🔧🔧\n")
 
     loop = asyncio.get_event_loop()
