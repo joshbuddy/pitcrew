@@ -18,13 +18,14 @@ class TestCli(unittest.TestCase):
 
     def test_docs(self):
         with open("docs/tasks.md") as fh:
-            expected_tasks = fh.read()
+            expected_docs = fh.read()
         os.remove("docs/tasks.md")
         runner = CliRunner()
         result = runner.invoke(cli, ["docs"])
         self.assertEqual(result.exit_code, 0)
         with open("docs/tasks.md") as fh:
-            self.assertEqual(fh.read(), expected_tasks)
+            actual_docs = fh.read()
+            self.assertEqual(actual_docs, expected_docs)
 
     def test_info(self):
         runner = CliRunner()

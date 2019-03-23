@@ -1,15 +1,37 @@
 # Crew
 
-AsyncIO-powered python DSL for doing things to systems locally, on docker, or over ssh.
+AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
 
 [![CircleCI](https://circleci.com/gh/joshbuddy/crew.svg?style=svg)](https://circleci.com/gh/joshbuddy/crew)
 
-Crew does this through two concepts *tasks* and *contexts*.
+## At a glance
 
-A *task* can perform any system operation by calling other tasks or invoking a command on a shell.
+Crew makes it easy to run commands on one or a lot of machines.
 
-A *context* is a place where these tasks can be performed, such as over ssh, locally or
-on a running docker container.
+### Get the time on 100 machines at once
+
+`bin/crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' -- date`
+
+### Install Homebrew on a Mac
+
+`bin/crew run install.homebrew`
+
+### Host a website on S3
+
+`bin/crew run examples.s3.deploy --bucket=crew-example-bucket --src docs --host "docs.pitcrew.io"`
+
+## Installation
+
+(still working on this)
+
+## Concepts
+
+A command or set of commands is called a **task**. A **context** runs tasks either locally, on docker or over ssh.
+A **provider** generates contexts.
+
+### Tasks
+
+Tasks are either composed from other tasks or invoking a command on a shell.
 
 An example of a *task* might be reading a file. `fs.read(path)` reads a file as bytes and returns it:
 
@@ -35,38 +57,42 @@ class FsRead(task.BaseTask):
 Other tasks might include writing a file, installing xcode or cloning a git repository. All the currently available
 tasks are listed at [docs/tasks.md](docs/tasks.md). The api available in a task is available at [docs/api.md#crewtask](docs/api.md#crewtask).
 
+### Contexts
+
 An example of a *context* might be over ssh, or even locally. Learn more about contexts at [docs/api.md#crewcontext](docs/api.md#crewcontext).
 
-## Installation
+### Providers
 
-(still working on this)
+A *provider* is a task with a specific return type. The return type is an async iterator which returns contexts.
 
 ## Usage
 
-### `bin/crew list`
+### Run a command
 
-Lists tasks.
+Crew allows running a command using `bin/crew sh -- [shell command]`.
 
-### `bin/crew new [task-name]`
+For example `bin/crew sh -- ls /` will list the "/" directory locally.
 
-Creates a new task.
+You can run this across three hosts via ssh using `bin/crew sh -p providers.ssh -P '{"hosts": ["192.168.0.1", "192.168.0.2", "192.168.0.3"]}' -- ls /`.
 
-### `bin/crew info [task-name]`
+See [docs/cli.md#run](docs/cli.md#sh) for more details.
 
-Shows information for a single task.
+### Run a task
 
-### `bin/crew run [task-name] <args>`
+Crew allows running a task using `bin/crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider. See [docs/cli.md#run](docs/cli.md#run) for more details.
 
-Runs a task.
+### See available tasks
 
-### `bin/crew test <task-prefix>`
+To see all the available tasks run `bin/crew list`. This will show all available tasks which are stored in `crew/tasks`. See [docs/cli.md#run](docs/cli.md#list) for more details.
 
-Run task tests, optionally specifying a task prefix.
+### Make a new task
 
-### `bin/crew docs`
+To see all the available tasks run `bin/crew new [task_name]`. This will create a template of a new task. For example if
 
-Generates docs in the docs directory.
+### Run tests
 
-### `bin/crew help`
+To run an ad-hoc command use . For tasks use `bin/crew run [task-name] <args>`
 
-Prints out help
+### Get CLI help
+
+To see the whole list of commands available from the command-line, run `bin/crew help`.

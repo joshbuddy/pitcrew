@@ -12,8 +12,7 @@ class LocalProvider:
     async def __anext__(self):
         if not self.returned:
             self.returned = True
-            async with self.local_context:
-                return self.local_context
+            return self.local_context
         else:
             raise StopAsyncIteration
 
@@ -21,9 +20,9 @@ class LocalProvider:
         return "LocalProvider"
 
 
-@task.returns("Describe the return value")
+@task.returns("An async generator that gives a local context")
 class ProvidersLocal(task.BaseTask):
-    """The description of the task"""
+    """A provider for a local context"""
 
     async def run(self) -> LocalProvider:
         return LocalProvider(self.context.local_context)

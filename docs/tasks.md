@@ -543,6 +543,41 @@ class FsIsFile(task.BaseTask):
 
 </details>
 
+## fs.list
+
+List the files in a directory.
+
+### Arguments
+
+
+- path *(str)* : The file to read
+
+
+### Returns
+
+*(list)* The bytes of the file
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+from crew import task
+
+
+@task.arg("path", desc="The file to read", type=str)
+@task.returns("The bytes of the file")
+class FsList(task.BaseTask):
+    """List the files in a directory."""
+
+    async def run(self) -> list:
+        out = await self.sh(f"ls -1 {self.params.esc_path}")
+        return out.strip().split("\n")
+
+```
+
+</details>
+
 ## fs.read
 
 Read value of path into bytes
@@ -888,16 +923,72 @@ class InstallXcodeCli(task.BaseTask):
 
 </details>
 
+## providers.docker
+
+A provider for ssh contexts
+
+### Arguments
+
+
+- container_ids *(list)* : The container ids to use
+
+
+### Returns
+
+*(DockerProvider)* An async generator that gives ssh contexts
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+from crew import task
+
+
+class DockerProvider:
+    def __init__(self, context, container_ids):
+        self.context = context
+        self.container_ids = container_ids
+        self.index = 0
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.index == len(self.container_ids):
+            raise StopAsyncIteration
+        docker_ctx = self.context.docker_context(
+            container_id=self.container_ids[self.index]
+        )
+        self.index += 1
+        return docker_ctx
+
+    def __str__(self):
+        return f"DockerProvider(container_ids={self.container_ids})"
+
+
+@task.returns("An async generator that gives ssh contexts")
+@task.arg("container_ids", type=list, desc="The container ids to use")
+class ProvidersDocker(task.BaseTask):
+    """A provider for ssh contexts"""
+
+    async def run(self) -> DockerProvider:
+        return DockerProvider(self.context, self.params.container_ids)
+
+```
+
+</details>
+
 ## providers.local
 
-The description of the task
+A provider for a local context
 
 
 
 
 ### Returns
 
-*(LocalProvider)* Describe the return value
+*(LocalProvider)* An async generator that gives a local context
 
 
 <details>
@@ -918,8 +1009,7 @@ class LocalProvider:
     async def __anext__(self):
         if not self.returned:
             self.returned = True
-            async with self.local_context:
-                return self.local_context
+            return self.local_context
         else:
             raise StopAsyncIteration
 
@@ -927,9 +1017,9 @@ class LocalProvider:
         return "LocalProvider"
 
 
-@task.returns("Describe the return value")
+@task.returns("An async generator that gives a local context")
 class ProvidersLocal(task.BaseTask):
-    """The description of the task"""
+    """A provider for a local context"""
 
     async def run(self) -> LocalProvider:
         return LocalProvider(self.context.local_context)
@@ -940,6 +1030,63 @@ class ProvidersLocalTest(task.TaskTest):
     async def test_ubuntu(self):
         async for p in await self.providers.local():
             assert p == self.context.local_context
+
+```
+
+</details>
+
+## providers.ssh
+
+A provider for ssh contexts
+
+### Arguments
+
+
+- user *(str)* : The user to use for the ssh contexts
+- hosts *(list)* : The hosts to use for ssh contexts
+
+
+### Returns
+
+*(SSHProvider)* An async generator that gives ssh contexts
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+from crew import task
+
+
+class SSHProvider:
+    def __init__(self, context, hosts, user):
+        self.context = context
+        self.hosts = hosts
+        self.user = user
+        self.index = 0
+
+    def __aiter__(self):
+        return self
+
+    async def __anext__(self):
+        if self.index == len(self.hosts):
+            raise StopAsyncIteration
+        ssh_ctx = self.context.ssh_context(host=self.hosts[self.index], user=self.user)
+        self.index += 1
+        return ssh_ctx
+
+    def __str__(self):
+        return f"SSHProvider(user={self.user} hosts={self.hosts})"
+
+
+@task.returns("An async generator that gives ssh contexts")
+@task.arg("user", type=str, desc="The user to use for the ssh contexts")
+@task.arg("hosts", type=list, desc="The hosts to use for ssh contexts")
+class ProvidersSsh(task.BaseTask):
+    """A provider for ssh contexts"""
+
+    async def run(self) -> SSHProvider:
+        return SSHProvider(self.context, self.params.hosts, self.params.user)
 
 ```
 

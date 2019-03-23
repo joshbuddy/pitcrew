@@ -7,6 +7,7 @@ from crew.state import FileState, NullState
 from crew.context import LocalContext
 from crew.docs import Docs
 from crew.test import TestRunner
+from crew.executor import Executor
 
 
 class App:
@@ -17,6 +18,9 @@ class App:
         self.state = FileState(os.path.join(os.getcwd(), "state.yml"))
         self.loader = Loader()
         self.local_context = LocalContext(self, self.loader, self.state)
+
+    def executor(self, *args, **kwargs):
+        return Executor(*args, **kwargs)
 
     def load(self, task_name):
         task = self.loader.load(task_name, self.local_context)

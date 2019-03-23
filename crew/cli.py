@@ -4,7 +4,6 @@ import asyncio
 import click
 import argparse
 import base64
-from typing import Tuple, Dict
 from crew.app import App
 
 
@@ -16,7 +15,70 @@ def cli(ctx):
 
 
 @cli.command(
-    short_help="run a command",
+    short_help="run a shell command",
+    context_settings={
+        "ignore_unknown_options": True,
+        "allow_extra_args": True,
+        "allow_interspersed_args": True,
+    },
+)
+@click.argument("shell_command", nargs=-1, type=click.UNPROCESSED)
+@click.option("--provider", "-p", default="providers.local")
+@click.option("--provider-args", "provider_json", "-P", default="{}")
+@click.pass_context
+def sh(ctx, *, provider, provider_json, shell_command):
+    """Allows running a shell command."""
+
+    async def run_task():
+        async with App() as app:
+            provider_args = json.loads(provider_json)
+            sys.stderr.write(
+                f"Invoking \033[1m{shell_command}\033[0m with\n  provider \033[1m{provider} {provider_args}\033[0m\n"
+            )
+
+            joined_command = " ".join(shell_command)
+
+            async def fn(self):
+                return await self.sh(joined_command)
+
+            provider_task = app.load(provider)
+            provider_instance = await provider_task.invoke(**provider_args)
+            executor = app.executor(provider_instance)
+            results = await executor.invoke(fn)
+
+            class OutputEncoder(json.JSONEncoder):
+                def default(self, obj):
+                    if isinstance(obj, bytes):
+                        try:
+                            return obj.decode("utf-8", "strict")
+                        except UnicodeDecodeError:
+                            return base64.b64encode(obj)
+                    elif isinstance(obj, Exception):
+                        return str(obj)
+                    else:
+                        return json.JSONEncoder.default(self, obj)
+
+            if results.passed:
+                sys.stderr.write("Passed:\n")
+                sys.stdout.write(json.dumps(results.passed, cls=OutputEncoder))
+                sys.stdout.flush()
+                sys.stderr.write("\n")
+            if results.failed:
+                sys.stderr.write("Failed:\n")
+                sys.stderr.write(json.dumps(results.failed, cls=OutputEncoder))
+                sys.stderr.write("\n")
+                sys.stderr.flush()
+            sys.stderr.write(
+                f"\nSummary (results={len(results.passed)} failures={len(results.failed)})"
+            )
+            sys.stderr.write(f"\n 🔧🔧🔧 Done! 🔧🔧🔧\n")
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(run_task())
+
+
+@cli.command(
+    short_help="run a task",
     context_settings={
         "ignore_unknown_options": True,
         "allow_extra_args": True,
@@ -25,9 +87,13 @@ def cli(ctx):
 )
 @click.argument("task_name")
 @click.argument("extra_args", nargs=-1, type=click.UNPROCESSED)
-@click.option("--provider", default="providers.local()")
+@click.option("--provider", "-p", default="providers.local")
+@click.option("--provider-args", "provider_json", "-P", default="{}")
 @click.pass_context
-def run(ctx, *, provider, task_name, extra_args):
+def run(ctx, *, provider, provider_json, task_name, extra_args):
+    """Allows running a task in crew/tasks. Parameters after task name are
+    interpretted as task arguments."""
+
     async def run_task():
         async with App() as app:
             task = app.load(task_name)
@@ -40,20 +106,16 @@ def run(ctx, *, provider, task_name, extra_args):
                     parser.add_argument(f"--{arg.name}", help=arg.desc)
 
             parsed_task_args = parser.parse_args(extra_args)
+            provider_args = json.loads(provider_json)
             dict_args = vars(parsed_task_args)
             sys.stderr.write(
-                f"Invoking \033[1m{task_name}\033[0m \033[1m{dict_args}\033[0m with provider \033[1m{provider}\033[0m\n"
+                f"Invoking \033[1m{task_name}\033[0m \033[1m{dict_args}\033[0m with\n  provider \033[1m{provider} {provider_args}\033[0m\n"
             )
 
-            async def provider_fn(self) -> Tuple[Dict, Dict]:
-                results = {}
-                failures = {}
-                generator = await eval(f"self.{provider}")
-                async for context in generator:
-                    results[context.descriptor()] = await task.invoke_with_context(
-                        context, **dict_args
-                    )
-                return results, failures
+            provider_task = app.load(provider)
+            provider_instance = await provider_task.invoke(**provider_args)
+            executor = app.executor(provider_instance)
+            results = await executor.run_task(task, **dict_args)
 
             class OutputEncoder(json.JSONEncoder):
                 def default(self, obj):
@@ -62,22 +124,23 @@ def run(ctx, *, provider, task_name, extra_args):
                             return obj.decode("utf-8", "strict")
                         except UnicodeDecodeError:
                             return base64.b64encode(obj)
+                    elif isinstance(obj, Exception):
+                        return str(obj)
                     else:
                         return json.JSONEncoder.default(self, obj)
 
-            results, failures = await app.local_context.invoke(provider_fn)
-            if results:
-                sys.stderr.write("Result:\n")
-                sys.stdout.write(json.dumps(results, cls=OutputEncoder))
+            if results.passed:
+                sys.stderr.write("Passed:\n")
+                sys.stdout.write(json.dumps(results.passed, cls=OutputEncoder))
                 sys.stdout.flush()
                 sys.stderr.write("\n")
-            if failures:
-                sys.stderr.write("Failures:\n")
-                sys.stderr.write(str(failures))
+            if results.failed:
+                sys.stderr.write("Failed:\n")
+                sys.stderr.write(json.dumps(results.failed, cls=OutputEncoder))
                 sys.stderr.write("\n")
                 sys.stderr.flush()
             sys.stderr.write(
-                f"\nSummary (results={len(results)} failures={len(failures)})"
+                f"\nSummary (results={len(results.passed)} failures={len(results.failed)})"
             )
             sys.stderr.write(f"\n 🔧🔧🔧 Done! 🔧🔧🔧\n")
 
@@ -88,6 +151,8 @@ def run(ctx, *, provider, task_name, extra_args):
 @cli.command(short_help="list all tasks")
 @click.pass_context
 def list(ctx):
+    """Lists available crew tasks."""
+
     app = App()
     for task in app.loader.each_task():
         if task.nodoc:
@@ -104,6 +169,8 @@ def list(ctx):
 @click.argument("task_name")
 @click.pass_context
 def info(ctx, *, task_name):
+    """Shows information about a single task."""
+
     task = App().load(task_name)
     print("\033[1mName\033[0m")
     print(task_name)
@@ -121,6 +188,8 @@ def info(ctx, *, task_name):
 @cli.command(short_help="generate docs")
 @click.pass_context
 def docs(ctx):
+    """Regenerates docs."""
+
     html = App().docs().generate()
     with open("docs/tasks.md", "w") as fh:
         fh.write(html)
@@ -132,6 +201,8 @@ def docs(ctx):
 @click.argument("task_prefix", nargs=-1)
 @click.pass_context
 def test(ctx, task_prefix):
+    """Run task tests."""
+
     async def run_tests():
         async with App() as app:
             await app.test_runner().run(task_prefix)
