@@ -21,7 +21,7 @@ class File:
                 if mode:
                     await dest.context.fs.chmod(dest.path, mode)
             else:
-                raise
+                raise Exception(f"cannot find a copier for {pair}")
 
 
 class LocalFile(File):

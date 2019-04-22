@@ -69,6 +69,8 @@ class AptgetInstall(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## apt_get.update
 
 Performs `apt-get update`
@@ -93,6 +95,8 @@ class AptgetUpdate(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## crew.install
 
@@ -158,6 +162,8 @@ class CrewInstallTest(task.TaskTest):
 
 </details>
 
+-------------------------------------------------
+
 ## docker.run
 
 Runs a specific docker image
@@ -219,6 +225,8 @@ class DockerRun(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## docker.stop
 
 Stops docker container with specified id
@@ -256,6 +264,119 @@ class DockerStop(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
+## ensure.aws.route53.has_records
+
+Ensure route53 has the set of records
+
+### Arguments
+
+
+- zone_id *(str)* : The zone id to operate on
+- records *(list)* : A list of records to ensure are set
+
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+import json
+import asyncio
+from crew import task
+
+
+@task.arg("zone_id", desc="The zone id to operate on", type=str)
+@task.arg("records", desc="A list of records to ensure are set", type=list)
+class HasRecords(task.BaseTask):
+    """Ensure route53 has the set of records"""
+
+    async def verify(self):
+        json_out = await self.sh(
+            f"aws route53 list-resource-record-sets --hosted-zone-id {self.params.esc_zone_id}"
+        )
+        out = json.loads(json_out)
+        existing_record_sets = out["ResourceRecordSets"]
+        for record in self.params.records:
+            assert record in existing_record_sets, "cannot find record"
+
+    async def run(self):
+        changes = map(
+            lambda c: {"Action": "UPSERT", "ResourceRecordSet": c}, self.params.records
+        )
+        change_batch = {"Changes": list(changes)}
+        change_id = json.loads(
+            await self.sh(
+                f"aws route53 change-resource-record-sets --hosted-zone-id {self.params.esc_zone_id} --change-batch {self.esc(json.dumps(change_batch))}"
+            )
+        )["ChangeInfo"]["Id"]
+        while (
+            json.loads(
+                await self.sh(f"aws route53 get-change --id {self.esc(change_id)}")
+            )["ChangeInfo"]["Status"]
+            == "PENDING"
+        ):
+            await asyncio.sleep(5)
+
+```
+
+</details>
+
+-------------------------------------------------
+
+## examples.deploy_pitcrew.build
+
+Builds the website in the `out` directory.
+
+
+
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+import os
+import re
+from crew import task
+
+# [ ] fix links
+
+
+class Build(task.BaseTask):
+    """Builds the website in the `out` directory."""
+
+    async def run(self):
+        await self.sh("bin/crew docs")
+        await self.sh("rm -rf out")
+        await self.sh("mkdir out")
+        await self.task_file("water.css").copy_to(self.file("out/water.css"))
+
+        docs = []
+        files = await self.fs.list("docs")
+        for f in files:
+            name = f.split("/")[-1]
+            target = f"out/docs/{os.path.splitext(name)[0]}.html"
+            docs.append(self.generate_doc(f"docs/{f}", target))
+        docs.append(self.generate_doc("README.md", "out/index.html"))
+        await self.run_all(*docs)
+
+    async def generate_doc(self, source, target):
+        out = await self.sh(
+            f"env/bin/python -m markdown2 -x fenced-code-blocks -x header-ids {source}"
+        )
+        out = re.sub(r"\.md", ".html", out)
+        await self.sh(f"mkdir -p {self.esc(os.path.split(target)[0])}")
+        page = self.template("doc.html.j2").render_as_bytes(body=out)
+        await self.fs.write(target, page)
+
+```
+
+</details>
+
+-------------------------------------------------
+
 ## facts.system.uname
 
 Returns the lowercase name of the platform
@@ -286,6 +407,8 @@ class Uname(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## fs.chmod
 
@@ -330,6 +453,8 @@ class FsChmodTest(task.TaskTest):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.chown
 
 Changes the file mode of the specified path
@@ -366,6 +491,8 @@ class FsChown(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## fs.digests.md5
 
@@ -420,6 +547,8 @@ class FsDigestsMd5Test(task.TaskTest):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.digests.sha256
 
 Gets sha256 digest of path
@@ -473,6 +602,8 @@ class FsDigestsSha256Test(task.TaskTest):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.is_directory
 
 Checks if the path is a directory
@@ -508,9 +639,11 @@ class FsIsDirectory(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.is_file
 
-Checks if the path is a directory
+Checks if the path is a file
 
 ### Arguments
 
@@ -520,7 +653,7 @@ Checks if the path is a directory
 
 ### Returns
 
-*(bool)* Indicates if target path is a directory
+*(bool)* Indicates if target path is a file
 
 
 <details>
@@ -531,9 +664,9 @@ from crew import task
 
 
 @task.arg("path", desc="The path to check")
-@task.returns("Indicates if target path is a directory")
+@task.returns("Indicates if target path is a file")
 class FsIsFile(task.BaseTask):
-    """Checks if the path is a directory"""
+    """Checks if the path is a file"""
 
     async def run(self) -> bool:
         code, _, _ = await self.sh_with_code(f"test -f {self.params.esc_path}")
@@ -542,6 +675,8 @@ class FsIsFile(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## fs.list
 
@@ -578,6 +713,8 @@ class FsList(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.read
 
 Read value of path into bytes
@@ -613,6 +750,8 @@ class FsRead(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## fs.stat
 
@@ -697,6 +836,8 @@ class FsStatTest(task.TaskTest):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.touch
 
 Touches a file
@@ -726,6 +867,8 @@ class FsTouch(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## fs.write
 
 Write bytes to a file
@@ -742,7 +885,6 @@ Write bytes to a file
 <summary>Show source</summary>
 
 ```python
-import base64
 import hashlib
 from crew import task
 
@@ -761,12 +903,23 @@ class FsWrite(task.BaseTask):
 
     async def run(self):
         await self.sh(
-            f"echo {self.esc(base64.b64encode(self.params.content).decode())} | base64 --decode | tee {self.params.esc_path} > /dev/null"
+            f"tee {self.params.esc_path} > /dev/null", stdin=self.params.content
         )
+
+
+class FsWriteTest(task.TaskTest):
+    @task.TaskTest.ubuntu
+    async def test_ubuntu(self):
+        with self.cd("/tmp"):
+            await self.fs.write("some-file", b"some content")
+            out = await self.sh("cat some-file")
+            assert out == "some content"
 
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## git.clone
 
@@ -814,6 +967,8 @@ homebrew or apt-get.
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## homebrew.install
 
@@ -864,6 +1019,8 @@ class HomebrewInstall(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## install.homebrew
 
 Ensures xcode is installed
@@ -894,6 +1051,8 @@ class InstallHomebrew(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## install.xcode_cli
 
 Ensures xcode is installed
@@ -922,6 +1081,8 @@ class InstallXcodeCli(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 
 ## providers.docker
 
@@ -979,6 +1140,8 @@ class ProvidersDocker(task.BaseTask):
 
 </details>
 
+-------------------------------------------------
+
 ## providers.local
 
 A provider for a local context
@@ -1035,6 +1198,8 @@ class ProvidersLocalTest(task.TaskTest):
 
 </details>
 
+-------------------------------------------------
+
 ## providers.ssh
 
 A provider for ssh contexts
@@ -1056,12 +1221,22 @@ A provider for ssh contexts
 
 ```python
 from crew import task
+from crew.cidrize import cidrize
 
 
 class SSHProvider:
     def __init__(self, context, hosts, user):
         self.context = context
         self.hosts = hosts
+
+        self.flattened_hosts = []
+
+        for host in self.hosts:
+            networks = cidrize(host)
+            for n in networks:
+                for ip in n.iter_hosts():
+                    self.flattened_hosts.append(str(ip))
+
         self.user = user
         self.index = 0
 
@@ -1069,9 +1244,11 @@ class SSHProvider:
         return self
 
     async def __anext__(self):
-        if self.index == len(self.hosts):
+        if self.index == len(self.flattened_hosts):
             raise StopAsyncIteration
-        ssh_ctx = self.context.ssh_context(host=self.hosts[self.index], user=self.user)
+        ssh_ctx = self.context.ssh_context(
+            host=self.flattened_hosts[self.index], user=self.user
+        )
         self.index += 1
         return ssh_ctx
 
@@ -1091,4 +1268,6 @@ class ProvidersSsh(task.BaseTask):
 ```
 
 </details>
+
+-------------------------------------------------
 

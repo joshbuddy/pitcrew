@@ -2,6 +2,15 @@ import time
 import sys
 
 
+def truncated_value(val):
+    if not isinstance(val, str) and not isinstance(val, bytes):
+        return val
+    elif len(val) < 100:
+        return val
+    else:
+        return f"{val[0:100]}..."
+
+
 class TaskLogger:
     def __init__(self, logger, task):
         self.logger = logger
@@ -15,7 +24,7 @@ class TaskLogger:
         line += f"> {self.task.name}"
         line += "\033[0m"
         for key, val in self.task.params.__dict__().items():
-            line += f" {key}=\033[1m{val}\033[0m"
+            line += f" {key}=\033[1m{truncated_value(val)}\033[0m"
         logger.info(line)
 
         self.logger.task_stack.append(self)
@@ -33,7 +42,7 @@ class TaskLogger:
         else:
             line += f" \033[32m✓\033[0m"
             if self.task.return_value:
-                line += f" << {self.task.return_value}"
+                line += f" << {truncated_value(self.task.return_value)}"
         logger.info(line)
 
 
@@ -98,13 +107,13 @@ class Logger:
 
     def shell_start(self, context, command):
         line = "  " * len(self.task_stack)
-        line += f"\033[33m${context.descriptor()}\033[0m {command}"
+        line += f"\033[33m${context.descriptor()}\033[0m {truncated_value(command)}"
         self.writer.write(line)
         self.writer.flush()
 
     def shell_stop(self, context, code, out, err):
         self.info(
-            f" # code={code} out={self.truncated_value(out)} err={self.truncated_value(err)}"
+            f" # code={code} out={truncated_value(out)} err={truncated_value(err)}"
         )
 
     def with_copy(self, src, dest):
@@ -117,12 +126,6 @@ class Logger:
 
     def depth(self):
         return len(self.task_stack)
-
-    def truncated_value(self, val):
-        if len(val) < 100:
-            return val
-        else:
-            return f"{val[0:100]}..."
 
 
 logger = Logger(sys.stderr)

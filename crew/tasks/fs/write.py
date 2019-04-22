@@ -1,4 +1,3 @@
-import base64
 import hashlib
 from crew import task
 
@@ -17,5 +16,14 @@ class FsWrite(task.BaseTask):
 
     async def run(self):
         await self.sh(
-            f"echo {self.esc(base64.b64encode(self.params.content).decode())} | base64 --decode | tee {self.params.esc_path} > /dev/null"
+            f"tee {self.params.esc_path} > /dev/null", stdin=self.params.content
         )
+
+
+class FsWriteTest(task.TaskTest):
+    @task.TaskTest.ubuntu
+    async def test_ubuntu(self):
+        with self.cd("/tmp"):
+            await self.fs.write("some-file", b"some content")
+            out = await self.sh("cat some-file")
+            assert out == "some content"

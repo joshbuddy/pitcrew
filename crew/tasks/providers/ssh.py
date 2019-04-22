@@ -1,10 +1,20 @@
 from crew import task
+from crew.cidrize import cidrize
 
 
 class SSHProvider:
     def __init__(self, context, hosts, user):
         self.context = context
         self.hosts = hosts
+
+        self.flattened_hosts = []
+
+        for host in self.hosts:
+            networks = cidrize(host)
+            for n in networks:
+                for ip in n.iter_hosts():
+                    self.flattened_hosts.append(str(ip))
+
         self.user = user
         self.index = 0
 
@@ -12,9 +22,11 @@ class SSHProvider:
         return self
 
     async def __anext__(self):
-        if self.index == len(self.hosts):
+        if self.index == len(self.flattened_hosts):
             raise StopAsyncIteration
-        ssh_ctx = self.context.ssh_context(host=self.hosts[self.index], user=self.user)
+        ssh_ctx = self.context.ssh_context(
+            host=self.flattened_hosts[self.index], user=self.user
+        )
         self.index += 1
         return ssh_ctx
 

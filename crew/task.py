@@ -199,6 +199,13 @@ class BaseTask(ABC):
         else:
             self.invoke(*args, **kwargs)
 
+    def task_file(self, path):
+        file_path = os.path.abspath(
+            os.path.join(inspect.getfile(self.__class__), "..", path)
+        )
+
+        return self.context.local_context.file(file_path)
+
     @abstractmethod
     async def run(self):
         pass

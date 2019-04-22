@@ -59,7 +59,15 @@ class TestCli(unittest.TestCase):
         self.assertEqual(result.exit_code, 0)
 
         with open("requirements.txt", "r") as fh:
-            expected_output = json.dumps({f"{getpass.getuser()}@local": fh.read()})
+            expected_output = json.dumps(
+                [
+                    {
+                        "context": f"{getpass.getuser()}@local",
+                        "result": fh.read(),
+                        "exception": None,
+                    }
+                ]
+            )
             self.assertEqual(result.stdout_bytes.decode(), expected_output)
 
     def test_run_with_binary(self):
@@ -69,7 +77,15 @@ class TestCli(unittest.TestCase):
         runner = CliRunner(mix_stderr=False)
         result = runner.invoke(cli, ["run", "fs.read", "test_data"])
         self.assertEqual(result.exit_code, 0)
-        expected_output = json.dumps({f"{getpass.getuser()}@local": base64_data})
+        expected_output = json.dumps(
+            [
+                {
+                    "context": f"{getpass.getuser()}@local",
+                    "result": base64_data,
+                    "exception": None,
+                }
+            ]
+        )
         self.assertEqual(result.stdout_bytes.decode(), expected_output)
 
     def test_test(self):

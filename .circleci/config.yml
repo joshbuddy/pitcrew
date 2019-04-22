@@ -25,7 +25,7 @@ jobs:
           name: install dependencies
           command: |
             python3 -m venv env
-            . venv/bin/activate
+            . env/bin/activate
             pip install -r requirements.txt
 
       - save_cache:
@@ -34,27 +34,36 @@ jobs:
           key: v1-dependencies-{{ checksum "requirements.txt" }}
 
       - run:
+          name: check that docs are up-to-date
+          command: |
+            . env/bin/activate
+            PYTHONPATH=. python crew/cli.py docs
+            if ! git diff --no-ext-diff --quiet --exit-code; then
+                exit 1
+            fi
+
+      - run:
           name: run task tests
           command: |
-            . venv/bin/activate
+            . env/bin/activate
             PYTHONPATH=. python crew/cli.py test
 
       - run:
           name: run unit tests
           command: |
-            . venv/bin/activate
+            . env/bin/activate
             python -m unittest
 
       - run:
           name: check formatting
           command: |
-            . venv/bin/activate
+            . env/bin/activate
             black --check crew tests
 
       - run:
           name: check flake
           command: |
-            . venv/bin/activate
+            . env/bin/activate
             flake8 tests/**/*.py crew/**/*.py --ignore=E501,W503
 
       - store_artifacts:

@@ -71,7 +71,7 @@ class Context(ABC):
         self.parent_context = parent_context
 
     @abstractmethod
-    async def sh_with_code(command, env=None) -> Tuple[int, bytes, bytes]:
+    async def sh_with_code(command, stdin=None, env=None) -> Tuple[int, bytes, bytes]:
         pass
 
     @abstractmethod
@@ -82,12 +82,16 @@ class Context(ABC):
     def descriptor(self) -> str:
         pass
 
-    async def sh(self, command, env=None) -> str:
+    async def run_all(self, *tasks):
+        for f in asyncio.as_completed(tasks):
+            await f
+
+    async def sh(self, command, stdin=None, env=None) -> str:
         """Runs a shell command within the given context. Raises an AssertionError if it exits with
         a non-zero exitcode. Returns STDOUT encoded with utf-8."""
 
         logger.shell_start(self, command)
-        code, out, err = await self.sh_with_code(command, env=env)
+        code, out, err = await self.sh_with_code(command, stdin=stdin, env=env)
         logger.shell_stop(self, code, out, err)
         assert (
             code == 0
@@ -183,15 +187,21 @@ class LocalContext(Context):
             cls._singleton = object.__new__(LocalContext)
         return cls._singleton
 
-    async def sh_with_code(self, command, env=None):
+    async def sh_with_code(self, command, stdin=None, env=None):
         command = await self._prepare_command(command)
-        kwargs = {"stdout": asyncio.subprocess.PIPE, "stderr": asyncio.subprocess.PIPE}
+        new_env = os.environ.copy()
+        new_env.pop("__PYVENV_LAUNCHER__", None)
         if env:
-            kwargs["env"] = env
+            new_env.update(env)
 
+        kwargs = {
+            "stdout": asyncio.subprocess.PIPE,
+            "stderr": asyncio.subprocess.PIPE,
+            "stdin": asyncio.subprocess.PIPE,
+            "env": new_env,
+        }
         proc = await asyncio.create_subprocess_shell(command, **kwargs)
-
-        stdout, stderr = await proc.communicate()
+        stdout, stderr = await proc.communicate(input=stdin)
         return (proc.returncode, stdout, stderr)
 
     async def raw_sh_with_code(self, command):
@@ -222,12 +232,15 @@ class SSHContext(Context):
         self.port = port
         self.async_helper = None
         self.connection = None
+        self.connect_timeout = 1
         self.connection_kwargs = connection_kwargs
         super().__init__(app, loader, state, user=user, parent_context=parent_context)
 
-    async def sh_with_code(self, command, env=None):
+    async def sh_with_code(self, command, stdin=None, env=None):
         command = await self._prepare_command(command)
-        proc = await self.connection.run(command, env=env or {}, encoding=None)
+        proc = await self.connection.run(
+            command, stdin=stdin, env=env or {}, encoding=None
+        )
         return (proc.exit_status, proc.stdout, proc.stderr)
 
     async def raw_sh_with_code(self, command):
@@ -235,14 +248,17 @@ class SSHContext(Context):
         return (proc.exit_status, proc.stdout, proc.stderr)
 
     async def __aenter__(self):
-        self.async_helper = asyncssh.connect(
-            self.host, port=self.port, username=self.user, **self.connection_kwargs
+        gen = asyncio.wait_for(
+            asyncssh.connect(
+                self.host, port=self.port, username=self.user, **self.connection_kwargs
+            ),
+            timeout=self.connect_timeout,
         )
-        self.connection = await self.async_helper.__aenter__()
+        self.connection = await gen
         return self
 
     async def __aexit__(self, exc_type, exc_value, traceback):
-        await self.async_helper.__aexit__(exc_type, exc_value, traceback)
+        self.connection.close()
         await super().__aexit__(exc_type, exc_value, traceback)
 
     def descriptor(self):
@@ -256,19 +272,19 @@ class DockerContext(Context):
         self.container_id = container_id
         super().__init__(app, loader, state, **kwargs)
 
-    async def sh_with_code(self, command, env=None):
+    async def sh_with_code(self, command, stdin=None, env=None):
         command = await self._prepare_command(command)
         env_string = ""
         if env:
             for k, v in env.items():
                 env_string += f"-e {self.esc(k)}={self.esc(v)} "
 
-        cmd = f"docker exec {env_string}{self.container_id} /bin/sh -c {self.esc(command)}"
-        return await self.local_context.sh_with_code(cmd)
+        cmd = f"docker exec -i {env_string}{self.container_id} /bin/sh -c {self.esc(command)}"
+        return await self.local_context.sh_with_code(cmd, stdin=stdin)
 
     async def raw_sh_with_code(self, command):
         return await self.local_context.raw_sh_with_code(
-            f"docker exec {self.container_id} /bin/sh -c {self.esc(command)}"
+            f"docker exec -i {self.container_id} /bin/sh -c {self.esc(command)}"
         )
 
     def descriptor(self):

@@ -10,15 +10,15 @@ Crew makes it easy to run commands on one or a lot of machines.
 
 ### Get the time on 100 machines at once
 
-`bin/crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' -- date`
+`bin/crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' date`
 
 ### Install Homebrew on a Mac
 
 `bin/crew run install.homebrew`
 
-### Host a website on S3
+### Host a website using S3, CloudFront & SSL
 
-`bin/crew run examples.s3.deploy --bucket=crew-example-bucket --src docs --host "docs.pitcrew.io"`
+`bin/crew run examples.deploy_pitcrew`
 
 ## Installation
 

@@ -3,8 +3,8 @@ import sys
 import asyncio
 import click
 import argparse
-import base64
 from crew.app import App
+from crew.util import ResultsPrinter
 
 
 @click.group(invoke_without_command=False)
@@ -32,46 +32,20 @@ def sh(ctx, *, provider, provider_json, shell_command):
     async def run_task():
         async with App() as app:
             provider_args = json.loads(provider_json)
-            sys.stderr.write(
-                f"Invoking \033[1m{shell_command}\033[0m with\n  provider \033[1m{provider} {provider_args}\033[0m\n"
-            )
-
             joined_command = " ".join(shell_command)
+            sys.stderr.write(
+                f"Invoking \033[1m{joined_command}\033[0m with\n  provider \033[1m{provider} {provider_args}\033[0m\n"
+            )
 
             async def fn(self):
                 return await self.sh(joined_command)
 
             provider_task = app.load(provider)
             provider_instance = await provider_task.invoke(**provider_args)
-            executor = app.executor(provider_instance)
-            results = await executor.invoke(fn)
+            async with app.executor(provider_instance) as executor:
+                results = await executor.invoke(fn)
 
-            class OutputEncoder(json.JSONEncoder):
-                def default(self, obj):
-                    if isinstance(obj, bytes):
-                        try:
-                            return obj.decode("utf-8", "strict")
-                        except UnicodeDecodeError:
-                            return base64.b64encode(obj)
-                    elif isinstance(obj, Exception):
-                        return str(obj)
-                    else:
-                        return json.JSONEncoder.default(self, obj)
-
-            if results.passed:
-                sys.stderr.write("Passed:\n")
-                sys.stdout.write(json.dumps(results.passed, cls=OutputEncoder))
-                sys.stdout.flush()
-                sys.stderr.write("\n")
-            if results.failed:
-                sys.stderr.write("Failed:\n")
-                sys.stderr.write(json.dumps(results.failed, cls=OutputEncoder))
-                sys.stderr.write("\n")
-                sys.stderr.flush()
-            sys.stderr.write(
-                f"\nSummary (results={len(results.passed)} failures={len(results.failed)})"
-            )
-            sys.stderr.write(f"\n 🔧🔧🔧 Done! 🔧🔧🔧\n")
+            ResultsPrinter(results).print()
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_task())
@@ -114,35 +88,10 @@ def run(ctx, *, provider, provider_json, task_name, extra_args):
 
             provider_task = app.load(provider)
             provider_instance = await provider_task.invoke(**provider_args)
-            executor = app.executor(provider_instance)
-            results = await executor.run_task(task, **dict_args)
+            async with app.executor(provider_instance) as executor:
+                results = await executor.run_task(task, **dict_args)
 
-            class OutputEncoder(json.JSONEncoder):
-                def default(self, obj):
-                    if isinstance(obj, bytes):
-                        try:
-                            return obj.decode("utf-8", "strict")
-                        except UnicodeDecodeError:
-                            return base64.b64encode(obj)
-                    elif isinstance(obj, Exception):
-                        return str(obj)
-                    else:
-                        return json.JSONEncoder.default(self, obj)
-
-            if results.passed:
-                sys.stderr.write("Passed:\n")
-                sys.stdout.write(json.dumps(results.passed, cls=OutputEncoder))
-                sys.stdout.flush()
-                sys.stderr.write("\n")
-            if results.failed:
-                sys.stderr.write("Failed:\n")
-                sys.stderr.write(json.dumps(results.failed, cls=OutputEncoder))
-                sys.stderr.write("\n")
-                sys.stderr.flush()
-            sys.stderr.write(
-                f"\nSummary (results={len(results.passed)} failures={len(results.failed)})"
-            )
-            sys.stderr.write(f"\n 🔧🔧🔧 Done! 🔧🔧🔧\n")
+            ResultsPrinter(results).print()
 
     loop = asyncio.get_event_loop()
     loop.run_until_complete(run_task())

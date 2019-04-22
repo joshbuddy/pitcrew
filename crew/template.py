@@ -15,9 +15,11 @@ class Template:
         )
 
     def render(self, **kwargs) -> File:
+        with open(self.rendered_path, "wb") as out:
+            out.write(self.render_as_bytes(**kwargs))
+        return self.task.context.app.local_context.file(self.rendered_path)
+
+    def render_as_bytes(self, **kwargs) -> bytes:
         with open(self.path) as fh:
             template = JinjaTemplate(fh.read())
-            result = template.render(**kwargs)
-            with open(self.rendered_path, "w") as outh:
-                outh.write(result)
-        return self.task.context.app.local_context.file(self.rendered_path)
+            return template.render(**kwargs).encode()

@@ -1,3 +1,4 @@
+import re
 import os
 import atexit
 import shutil
@@ -36,12 +37,13 @@ class App:
         path = os.path.realpath(os.path.join(__file__, "..", "templates"))
         templateLoader = jinja2.FileSystemLoader(searchpath=path)
         templateEnv = jinja2.Environment(loader=templateLoader)
-        parts = name.split(".")
-        class_name = "".join(map(lambda p: p.capitalize(), parts))
+        word_parts = re.split(r"[._]", name)
+        path_parts = name.split(".")
+        class_name = "".join(map(lambda p: p.capitalize(), word_parts))
         template = templateEnv.get_template("new_task.py.j2")
         rendered_task = template.render(task_class_name=class_name)
         task_path = (
-            os.path.realpath(os.path.join(__file__, "..", "tasks", *parts)) + ".py"
+            os.path.realpath(os.path.join(__file__, "..", "tasks", *path_parts)) + ".py"
         )
         base_path = os.path.dirname(task_path)
         os.makedirs(base_path, exist_ok=True)
