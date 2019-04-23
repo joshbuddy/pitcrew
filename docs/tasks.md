@@ -130,7 +130,7 @@ class CrewInstall(task.BaseTask):
             await self.install.homebrew()
             await self.install("git")
             await self.git.clone(
-                "https://github.com/joshbuddy/crew.git", self.params.dest
+                "https://github.com/joshbuddy/pitcrew.git", self.params.dest
             )
             with self.cd(self.params.dest):
                 await self.homebrew.install("python3")
@@ -142,7 +142,7 @@ class CrewInstall(task.BaseTask):
             await self.apt_get.install("python3.6")
             await self.apt_get.install("python3-venv")
             await self.git.clone(
-                "https://github.com/joshbuddy/crew.git", self.params.dest
+                "https://github.com/joshbuddy/pitcrew.git", self.params.dest
             )
             with self.cd(self.params.dest):
                 await self.sh("python3.6 --version")
