@@ -41,6 +41,8 @@ class ChangeDirectory:
     def __init__(self, context, new_directory):
         self.context = context
         self.old_directory = context.directory
+        if not self.old_directory:
+            self.old_directory = "."
         if new_directory.startswith("/"):
             self.new_directory = new_directory
         else:
