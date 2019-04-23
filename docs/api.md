@@ -141,7 +141,7 @@ dict(**kwargs) -> new dictionary initialized with the name=value pairs
     in the keyword argument list.  For example:  dict(one=1, two=2)
 ### sh
 ```python
-Context.sh(self, command, env=None) -> str
+Context.sh(self, command, stdin=None, env=None) -> str
 ```
 Runs a shell command within the given context. Raises an AssertionError if it exits with
 a non-zero exitcode. Returns STDOUT encoded with utf-8.

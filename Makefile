@@ -5,5 +5,5 @@ docs:
 
 .PHONY: build
 
-build: env
+build:
 	./env/bin/pyinstaller crew.spec

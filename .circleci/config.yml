@@ -4,7 +4,7 @@
 #
 version: 2
 jobs:
-  test:
+  build:
     docker:
       - image: circleci/python:3.6.1
 
@@ -69,28 +69,3 @@ jobs:
       - store_artifacts:
           path: test-reports
           destination: test-reports
-
-  build_mac:
-    macos:
-      xcode: "10.0"
-
-    #filters:  # using regex filters requires the entire branch to match
-    #  branches:
-    #    only:  # only branches matching the below regex filters will run
-    #      - master
-
-    working_directory: ~/repo
-
-    steps:
-      - run:
-        name: build osx installer
-        command: make build
-
-workflows:
-  version: 2
-  test_build:
-    jobs:
-      - test
-      - build_mac:
-          requires:
-            - test

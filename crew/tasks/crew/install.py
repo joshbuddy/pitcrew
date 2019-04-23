@@ -30,7 +30,6 @@ class CrewInstall(task.BaseTask):
                 "https://github.com/joshbuddy/pitcrew.git", self.params.dest
             )
             with self.cd(self.params.dest):
-                await self.sh("python3.6 --version")
                 await self.sh("python3.6 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
         else:

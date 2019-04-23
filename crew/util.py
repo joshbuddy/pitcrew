@@ -39,7 +39,7 @@ class ResultsPrinter:
             sys.stderr.write(json.dumps(results.failed, cls=OutputEncoder))
             sys.stderr.write("\n")
             sys.stderr.flush()
-        if results.failed:
+        if results.errored:
             sys.stderr.write("Errored:\n")
             sys.stderr.write(json.dumps(results.errored, cls=OutputEncoder))
             sys.stderr.write("\n")

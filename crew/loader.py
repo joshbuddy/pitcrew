@@ -67,7 +67,8 @@ class Loader:
                 prefix.pop()
             else:
                 prefix[-1] = os.path.splitext(prefix[-1])[0]
-            yield self.populate_task(".".join(prefix))
+            if prefix:
+                yield self.populate_task(".".join(prefix))
         elif os.path.isdir(path):
             paths = os.listdir(path)
             paths.sort()

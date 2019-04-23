@@ -145,7 +145,6 @@ class CrewInstall(task.BaseTask):
                 "https://github.com/joshbuddy/pitcrew.git", self.params.dest
             )
             with self.cd(self.params.dest):
-                await self.sh("python3.6 --version")
                 await self.sh("python3.6 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
         else:
@@ -157,6 +156,125 @@ class CrewInstallTest(task.TaskTest):
     async def test_ubuntu(self):
         with self.cd("/tmp"):
             await self.crew.install()
+
+```
+
+</details>
+
+-------------------------------------------------
+
+## crew.release
+
+⚠️ *No task description set*
+
+### Arguments
+
+
+- version *(str)* : The version to release
+
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+import re
+from crew import task
+
+
+@task.arg("version", desc="The version to release", type=str)
+class CrewRelease(task.BaseTask):
+    async def run(self):
+        assert "master" == await self.sh(
+            "git rev-parse --abbrev-ref HEAD"
+        ), "not on master"
+        assert re.match(r"\d+\.\d+\.\d+", self.params.version)
+        await self.sh("mkdir -p pkg")
+        await self.crew.release.darwin(self.params.version)
+        await self.crew.release.linux(self.params.version)
+        name = "brand new release"
+        await self.sh(
+            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.esc(name)} {self.esc('pkg/*')}"
+        )
+
+```
+
+</details>
+
+-------------------------------------------------
+
+## crew.release.darwin
+
+⚠️ *No task description set*
+
+### Arguments
+
+
+- version *(str)* : The version to release
+
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+from crew import task
+
+
+@task.arg("version", desc="The version to release", type=str)
+class CrewBuildDarwin(task.BaseTask):
+    async def run(self):
+        assert await self.facts.system.uname() == "darwin"
+        await self.sh("make build")
+        target = f"pkg/crew-{self.params.version}-darwin"
+        await self.sh(f"cp dist/crew {target}")
+
+```
+
+</details>
+
+-------------------------------------------------
+
+## crew.release.linux
+
+⚠️ *No task description set*
+
+### Arguments
+
+
+- version *(str)* : The version to release
+
+
+
+<details>
+<summary>Show source</summary>
+
+```python
+from crew import task
+
+
+@task.arg("version", desc="The version to release", type=str)
+class CrewBuildLinux(task.BaseTask):
+    async def run(self):
+        container_id = await self.docker.run("ubuntu", detach=True, interactive=True)
+        docker_ctx = self.docker_context(container_id, user="root")
+
+        async with docker_ctx:
+            assert (
+                await docker_ctx.facts.system.uname() == "linux"
+            ), "the platform is not linux!"
+            await self.file(".").copy_to(docker_ctx.file("/tmp/crew"))
+            await docker_ctx.apt_get.update()
+            await docker_ctx.apt_get.install("python3.6")
+            await docker_ctx.apt_get.install("python3.6-dev")
+            await docker_ctx.apt_get.install("python3-venv")
+            await docker_ctx.apt_get.install("build-essential")
+            with docker_ctx.cd("/tmp/crew"):
+                await docker_ctx.sh("python3.6 -m venv --clear env")
+                await docker_ctx.sh("env/bin/pip install -r requirements.txt")
+                await docker_ctx.sh("make build")
+                target = f"pkg/crew-{self.params.version}-linux"
+                await docker_ctx.file("/tmp/crew/dist/crew").copy_to(self.file(target))
 
 ```
 
