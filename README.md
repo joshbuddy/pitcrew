@@ -2,7 +2,7 @@
 
 AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
 
-[![CircleCI](https://circleci.com/gh/joshbuddy/crew.svg?style=svg)](https://circleci.com/gh/joshbuddy/crew)
+[![CircleCI](https://circleci.com/gh/joshbuddy/pitcrew.svg?style=svg)](https://circleci.com/gh/joshbuddy/pitcrew)
 
 ## At a glance
 
