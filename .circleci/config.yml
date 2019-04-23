@@ -64,7 +64,7 @@ jobs:
           name: check flake
           command: |
             . env/bin/activate
-            flake8 tests/**/*.py crew/**/*.py --ignore=E501,W503
+            flake8 tests/**/*.py crew/**/*.py --ignore=E501,E203,W503
 
       - store_artifacts:
           path: test-reports

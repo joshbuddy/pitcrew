@@ -72,7 +72,7 @@ class Loader:
             paths = os.listdir(path)
             paths.sort()
             for p in paths:
-                if p.startswith("__"):
+                if p != "__init__.py" and p.startswith("__"):
                     continue
                 new_prefix = prefix + [p]
                 for t in self.each_task(new_prefix):

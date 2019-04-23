@@ -154,11 +154,6 @@ class DeployPitcrew(task.BaseTask):
         }
         for dist in items:
             if dist["Origins"]["Items"][0]["DomainName"] == s3_origin:
-                get_dist = json.loads(
-                    await self.sh(
-                        f"aws cloudfront get-distribution --id {self.esc(dist['Id'])}"
-                    )
-                )["Distribution"]
                 return dist["Id"]
 
         out = json.loads(

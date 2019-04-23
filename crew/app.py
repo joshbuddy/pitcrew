@@ -42,11 +42,22 @@ class App:
         class_name = "".join(map(lambda p: p.capitalize(), word_parts))
         template = templateEnv.get_template("new_task.py.j2")
         rendered_task = template.render(task_class_name=class_name)
-        task_path = (
-            os.path.realpath(os.path.join(__file__, "..", "tasks", *path_parts)) + ".py"
-        )
+        base_task_path = os.path.realpath(os.path.join(__file__, "..", "tasks"))
+        task_path = os.path.join(base_task_path, *path_parts) + ".py"
+        if os.path.isfile(task_path):
+            raise Exception(f"there is already something in the way {task_path}")
         base_path = os.path.dirname(task_path)
         os.makedirs(base_path, exist_ok=True)
+        for i in range(len(path_parts) - 1):
+            potential_task_path = (
+                os.path.join(base_task_path, *path_parts[0 : i + 1]) + ".py"
+            )
+            if os.path.isfile(potential_task_path):
+                new_path = os.path.join(
+                    base_task_path, *path_parts[0 : i + 1], "__init__.py"
+                )
+                os.rename(potential_task_path, new_path)
+
         with open(task_path, "w") as fh:
             fh.write(rendered_task)
 

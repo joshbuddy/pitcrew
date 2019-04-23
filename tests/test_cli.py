@@ -2,6 +2,7 @@ import base64
 import os
 import getpass
 import json
+import shutil
 from click.testing import CliRunner
 import unittest
 from crew.cli import cli
@@ -52,6 +53,23 @@ class TestCli(unittest.TestCase):
             self.assertTrue(os.path.isfile(task_path))
         finally:
             os.remove(task_path)
+
+    def test_new_rename(self):
+        base_path = os.path.abspath(os.path.join(__file__, "..", "..", "crew", "tasks"))
+        try:
+            runner = CliRunner()
+            result = runner.invoke(cli, ["new", "some.kind.of.task"])
+            self.assertEqual(result.exit_code, 0)
+            self.assertTrue(os.path.isfile(base_path + "/some/kind/of/task.py"))
+            result = runner.invoke(cli, ["new", "some.kind.of.task.lower"])
+            self.assertEqual(result.exit_code, 0)
+            self.assertFalse(os.path.isfile(base_path + "/some/kind/of/task.py"))
+            self.assertTrue(
+                os.path.isfile(base_path + "/some/kind/of/task/__init__.py")
+            )
+            self.assertTrue(os.path.isfile(base_path + "/some/kind/of/task/lower.py"))
+        finally:
+            shutil.rmtree(base_path + "/some/kind")
 
     def test_run(self):
         runner = CliRunner(mix_stderr=False)

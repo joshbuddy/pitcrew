@@ -2,8 +2,6 @@ import os
 import re
 from crew import task
 
-# [ ] fix links
-
 
 class Build(task.BaseTask):
     """Builds the website in the `out` directory."""
