@@ -1,4 +1,4 @@
-# Crew
+# 🔧 Crew
 
 AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
 
@@ -22,7 +22,24 @@ Crew makes it easy to run commands on one or a lot of machines.
 
 ## Installation
 
-(still working on this)
+### Easy mode
+
+To install crew in your home directory, run the following:
+
+```
+curl -fsSL https://github.com/joshbuddy/pitcrew/releases/latest/download/crew-darwin > crew
+chmod u+x crew
+./crew run crew.install --dest=~/crew
+```
+
+### Hard mode
+
+```
+git clone https://github.com/joshbuddy/pitcrew
+cd pitcrew
+python3.6 -m venv env
+env/bin/pip installer -r requirements.txt
+```
 
 ## Concepts
 
