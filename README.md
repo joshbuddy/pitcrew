@@ -1,4 +1,4 @@
-# Crew
+# 🔧 Crew
 
 AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
 
@@ -22,7 +22,24 @@ Crew makes it easy to run commands on one or a lot of machines.
 
 ## Installation
 
-(still working on this)
+### Easy mode
+
+To install crew in your home directory, run the following:
+
+```
+curl -fsSL https://github.com/joshbuddy/pitcrew/releases/latest/download/crew-darwin > crew
+chmod u+x crew
+./crew run crew.install --dest=~/crew
+```
+
+### Hard mode
+
+```
+git clone https://github.com/joshbuddy/pitcrew
+cd pitcrew
+python3.6 -m venv env
+env/bin/pip installer -r requirements.txt
+```
 
 ## Concepts
 
@@ -67,6 +84,8 @@ A *provider* is a task with a specific return type. The return type is an async 
 
 ## Usage
 
+For detailed usage, see [docs/cli.md](docs/cli.md) for more details.
+
 ### Run a command
 
 Crew allows running a command using `bin/crew sh -- [shell command]`.
@@ -75,23 +94,21 @@ For example `bin/crew sh -- ls /` will list the "/" directory locally.
 
 You can run this across three hosts via ssh using `bin/crew sh -p providers.ssh -P '{"hosts": ["192.168.0.1", "192.168.0.2", "192.168.0.3"]}' -- ls /`.
 
-See [docs/cli.md#run](docs/cli.md#sh) for more details.
-
 ### Run a task
 
-Crew allows running a task using `bin/crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider. See [docs/cli.md#run](docs/cli.md#run) for more details.
+Crew allows running a task using `bin/crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider.
 
 ### See available tasks
 
-To see all the available tasks run `bin/crew list`. This will show all available tasks which are stored in `crew/tasks`. See [docs/cli.md#run](docs/cli.md#list) for more details.
+To see all the available tasks run `bin/crew list`. This will show all available tasks which are stored in `crew/tasks`.
 
 ### Make a new task
 
-To see all the available tasks run `bin/crew new [task_name]`. This will create a template of a new task. For example if
+To see all the available tasks run `bin/crew new [task_name]`. This will create a template of a new task.
 
 ### Run tests
 
-To run an ad-hoc command use . For tasks use `bin/crew run [task-name] <args>`
+To run an ad-hoc command use . For tasks use `bin/crew run [task-name] <args>`.
 
 ### Get CLI help
 

@@ -10,7 +10,8 @@ class CrewInstall(task.BaseTask):
             await self.sh("./bin/crew --help")
 
     async def run(self):
-        if await self.facts.system.uname() == "darwin":
+        platform = await self.facts.system.uname()
+        if platform == "darwin":
             await self.install.xcode_cli()
             await self.install.homebrew()
             await self.install("git")
@@ -21,7 +22,7 @@ class CrewInstall(task.BaseTask):
                 await self.homebrew.install("python3")
                 await self.sh("python3 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
-        elif await self.facts.system.uname() == "linux":
+        elif platform == "linux":
             await self.apt_get.update()
             await self.apt_get.install("git")
             await self.apt_get.install("python3.6")
@@ -33,7 +34,7 @@ class CrewInstall(task.BaseTask):
                 await self.sh("python3.6 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
         else:
-            raise Exception("cannot install on this platform")
+            raise Exception(f"cannot install on this platform {platform}")
 
 
 class CrewInstallTest(task.TaskTest):

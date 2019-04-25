@@ -59,8 +59,6 @@ class ChangeDirectory:
 class Context(ABC):
     """Abstract base class for all contexts."""
 
-    cache = {}
-
     def __init__(
         self, app, loader, state, user=None, parent_context=None, directory=None
     ):
@@ -71,6 +69,7 @@ class Context(ABC):
         self.directory = directory
         self.actual_user = None
         self.parent_context = parent_context
+        self.cache = {}
 
     @abstractmethod
     async def sh_with_code(command, stdin=None, env=None) -> Tuple[int, bytes, bytes]:
