@@ -71,4 +71,4 @@ Generates documentation for the currently available tasks in the file `docs/task
 
 ## `crew help`
 
-### Get help for crew commands
+Get help for crew commands

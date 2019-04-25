@@ -194,7 +194,7 @@ class CrewRelease(task.BaseTask):
         await self.sh("mkdir -p pkg")
         await self.run_all(
             self.crew.release.darwin(self.params.version),
-            self.crew.release.linux(self.params.version)
+            self.crew.release.linux(self.params.version),
         )
         await self.sh(
             f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.params.esc_name} {self.esc('pkg/*')}"
