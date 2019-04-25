@@ -1,9 +1,9 @@
 .PHONY: docs
 
 docs:
-	PYTHONPATH=. pydocmd simple crew.task++  crew.context++ > docs/api.md
+	PYTHONPATH=. pydocmd simple pitcrew.task++  pitcrew.context++ > docs/api.md
 
 .PHONY: build
 
 build:
-	./env/bin/pyinstaller crew.spec
+	./env/bin/pyinstaller pitcrew.spec

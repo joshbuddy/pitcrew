@@ -1,4 +1,4 @@
-# 🔧 Crew
+# 🔧 Pitcrew
 
 AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
 
@@ -6,7 +6,7 @@ AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
 
 ## At a glance
 
-Crew makes it easy to run commands on one or a lot of machines.
+Pitcrew makes it easy to run commands on one or a lot of machines.
 
 ### Get the time on 100 machines at once
 
@@ -24,7 +24,7 @@ Crew makes it easy to run commands on one or a lot of machines.
 
 ### Easy mode
 
-To install crew in your home directory, run the following:
+To install pitcrew in your home directory, run the following:
 
 ```
 curl -fsSL https://github.com/joshbuddy/pitcrew/releases/latest/download/crew-darwin > crew
@@ -52,11 +52,11 @@ Tasks are either composed from other tasks or invoking a command on a shell.
 
 An example of a *task* might be reading a file. `fs.read(path)` reads a file as bytes and returns it:
 
-### `crew/tasks/fs/read.py`
+### `pitcrew/tasks/fs/read.py`
 
 ```python
 import base64
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The file to read", type=str)
@@ -88,7 +88,7 @@ For detailed usage, see [docs/cli.md](docs/cli.md) for more details.
 
 ### Run a command
 
-Crew allows running a command using `bin/crew sh -- [shell command]`.
+Pitcrew allows running a command using `bin/crew sh -- [shell command]`.
 
 For example `bin/crew sh -- ls /` will list the "/" directory locally.
 
@@ -96,7 +96,7 @@ You can run this across three hosts via ssh using `bin/crew sh -p providers.ssh 
 
 ### Run a task
 
-Crew allows running a task using `bin/crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider.
+Pitcrew allows running a task using `bin/crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider.
 
 ### See available tasks
 

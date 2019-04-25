@@ -5,7 +5,7 @@ import json
 import shutil
 from click.testing import CliRunner
 import unittest
-from crew.cli import cli
+from pitcrew.cli import cli
 
 
 class TestCli(unittest.TestCase):
@@ -43,7 +43,15 @@ class TestCli(unittest.TestCase):
     def test_new(self):
         task_path = os.path.abspath(
             os.path.join(
-                __file__, "..", "..", "crew", "tasks", "some", "kind", "of", "task.py"
+                __file__,
+                "..",
+                "..",
+                "pitcrew",
+                "tasks",
+                "some",
+                "kind",
+                "of",
+                "task.py",
             )
         )
         try:
@@ -55,7 +63,9 @@ class TestCli(unittest.TestCase):
             os.remove(task_path)
 
     def test_new_rename(self):
-        base_path = os.path.abspath(os.path.join(__file__, "..", "..", "crew", "tasks"))
+        base_path = os.path.abspath(
+            os.path.join(__file__, "..", "..", "pitcrew", "tasks")
+        )
         try:
             runner = CliRunner()
             result = runner.invoke(cli, ["new", "some.kind.of.task"])

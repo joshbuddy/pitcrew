@@ -21,7 +21,7 @@ Install a package using apt-get
 
 ```python
 import re
-from crew import task
+from pitcrew import task
 
 
 @task.arg("name", type=str, desc="The package to install")
@@ -83,7 +83,7 @@ Performs `apt-get update`
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 class AptgetUpdate(task.BaseTask):
@@ -113,7 +113,7 @@ Installs crew in the path specified
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.opt("dest", desc="The directory to install crew in", type=str, default="crew")
@@ -181,7 +181,7 @@ class CrewInstallTest(task.TaskTest):
 
 ```python
 import re
-from crew import task
+from pitcrew import task
 
 
 @task.arg("version", desc="The version to release", type=str)
@@ -221,7 +221,7 @@ class CrewRelease(task.BaseTask):
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("version", desc="The version to release", type=str)
@@ -253,7 +253,7 @@ class CrewBuildDarwin(task.BaseTask):
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("version", desc="The version to release", type=str)
@@ -308,7 +308,7 @@ Runs a specific docker image
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("image", desc="The image to run", type=str)
@@ -364,7 +364,7 @@ Stops docker container with specified id
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("container_id", desc="The container id to stop", type=str)
@@ -405,7 +405,7 @@ Ensure route53 has the set of records
 ```python
 import json
 import asyncio
-from crew import task
+from pitcrew import task
 
 
 @task.arg("zone_id", desc="The zone id to operate on", type=str)
@@ -461,7 +461,7 @@ This example builds and deploys pitcrew.io. It uses s3, cloudfront and acm to de
 ```python
 import json
 import asyncio
-from crew import task
+from pitcrew import task
 from uuid import uuid4
 
 
@@ -650,7 +650,7 @@ Builds the website in the `out` directory.
 ```python
 import os
 import re
-from crew import task
+from pitcrew import task
 
 
 class Build(task.BaseTask):
@@ -702,7 +702,7 @@ Returns the lowercase name of the platform
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.returns("The name of the platform")
@@ -735,7 +735,7 @@ Changes the file mode of the specified path
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path to change the mode of", type=str)
@@ -781,7 +781,7 @@ Changes the file mode of the specified path
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path to change the mode of", type=str)
@@ -823,7 +823,7 @@ Gets md5 digest of path
 
 ```python
 import hashlib
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path of the file to digest", type=str)
@@ -878,7 +878,7 @@ Gets sha256 digest of path
 
 ```python
 import hashlib
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path of the file to digest", type=str)
@@ -932,7 +932,7 @@ Checks if the path is a directory
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path to check")
@@ -969,7 +969,7 @@ Checks if the path is a file
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path to check")
@@ -1006,7 +1006,7 @@ List the files in a directory.
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The file to read", type=str)
@@ -1043,7 +1043,7 @@ Read value of path into bytes
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The file to read", type=str)
@@ -1081,7 +1081,7 @@ Get stat info for path
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 class Stat:
@@ -1162,7 +1162,7 @@ Touches a file
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", desc="The path to change the mode of", type=str)
@@ -1195,7 +1195,7 @@ Write bytes to a file
 
 ```python
 import hashlib
-from crew import task
+from pitcrew import task
 
 
 @task.arg("path", type=str, desc="The path of the file to write to")
@@ -1251,7 +1251,7 @@ homebrew or apt-get.
 
 ```python
 import os
-from crew import task
+from pitcrew import task
 
 
 @task.arg("url", desc="The url to clone", type=str)
@@ -1298,7 +1298,7 @@ Read value of path into bytes
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("name", type=str, desc="Package to install")
@@ -1353,7 +1353,7 @@ homebrew or apt-get.
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 @task.arg("name", desc="The name of the package to install", type=str)
@@ -1391,7 +1391,7 @@ Ensures xcode is installed
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 class InstallHomebrew(task.BaseTask):
@@ -1423,7 +1423,7 @@ Ensures xcode is installed
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 class InstallXcodeCli(task.BaseTask):
@@ -1461,7 +1461,7 @@ A provider for ssh contexts
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 class DockerProvider:
@@ -1516,7 +1516,7 @@ A provider for a local context
 <summary>Show source</summary>
 
 ```python
-from crew import task
+from pitcrew import task
 
 
 class LocalProvider:
@@ -1578,8 +1578,8 @@ A provider for ssh contexts
 <summary>Show source</summary>
 
 ```python
-from crew import task
-from crew.cidrize import cidrize
+from pitcrew import task
+from pitcrew.cidrize import cidrize
 
 
 class SSHProvider:

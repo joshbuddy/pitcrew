@@ -37,7 +37,7 @@ jobs:
           name: check that docs are up-to-date
           command: |
             . env/bin/activate
-            PYTHONPATH=. python crew/cli.py docs
+            PYTHONPATH=. python pitcrew/cli.py docs
             if ! git diff --no-ext-diff --quiet --exit-code; then
                 exit 1
             fi
@@ -46,7 +46,7 @@ jobs:
           name: run task tests
           command: |
             . env/bin/activate
-            PYTHONPATH=. python crew/cli.py test
+            PYTHONPATH=. python pitcrew/cli.py test
 
       - run:
           name: run unit tests
@@ -58,13 +58,13 @@ jobs:
           name: check formatting
           command: |
             . env/bin/activate
-            black --check crew tests
+            black --check pitcrew tests
 
       - run:
           name: check flake
           command: |
             . env/bin/activate
-            flake8 tests/**/*.py crew/**/*.py --ignore=E501,E203,W503
+            flake8 tests/**/*.py pit  crew/**/*.py --ignore=E501,E203,W503
 
       - store_artifacts:
           path: test-reports
