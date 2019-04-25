@@ -125,7 +125,8 @@ class CrewInstall(task.BaseTask):
             await self.sh("./bin/crew --help")
 
     async def run(self):
-        if await self.facts.system.uname() == "darwin":
+        platform = await self.facts.system.uname()
+        if platform == "darwin":
             await self.install.xcode_cli()
             await self.install.homebrew()
             await self.install("git")
@@ -136,7 +137,7 @@ class CrewInstall(task.BaseTask):
                 await self.homebrew.install("python3")
                 await self.sh("python3 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
-        elif await self.facts.system.uname() == "linux":
+        elif platform == "linux":
             await self.apt_get.update()
             await self.apt_get.install("git")
             await self.apt_get.install("python3.6")
@@ -148,7 +149,7 @@ class CrewInstall(task.BaseTask):
                 await self.sh("python3.6 -m venv --clear env")
                 await self.sh("env/bin/pip install -r requirements.txt")
         else:
-            raise Exception("cannot install on this platform")
+            raise Exception(f"cannot install on this platform {platform}")
 
 
 class CrewInstallTest(task.TaskTest):
@@ -171,6 +172,7 @@ class CrewInstallTest(task.TaskTest):
 
 
 - version *(str)* : The version to release
+- name *(str)* : The name of the release
 
 
 
@@ -183,18 +185,19 @@ from crew import task
 
 
 @task.arg("version", desc="The version to release", type=str)
+@task.arg("name", desc="The name of the release", type=str)
 class CrewRelease(task.BaseTask):
     async def run(self):
-        assert "master" == await self.sh(
-            "git rev-parse --abbrev-ref HEAD"
-        ), "not on master"
+        current_branch = (await self.sh("git rev-parse --abbrev-ref HEAD")).strip()
+        assert "master" == current_branch, "not on master"
         assert re.match(r"\d+\.\d+\.\d+", self.params.version)
         await self.sh("mkdir -p pkg")
-        await self.crew.release.darwin(self.params.version)
-        await self.crew.release.linux(self.params.version)
-        name = "brand new release"
+        await self.run_all(
+            self.crew.release.darwin(self.params.version),
+            self.crew.release.linux(self.params.version)
+        )
         await self.sh(
-            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.esc(name)} {self.esc('pkg/*')}"
+            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.params.esc_name} {self.esc('pkg/*')}"
         )
 
 ```
