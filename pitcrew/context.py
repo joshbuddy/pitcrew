@@ -87,6 +87,10 @@ class Context(ABC):
         for f in asyncio.as_completed(tasks):
             await f
 
+    async def sh_ok(self, command, stdin=None, env=None) -> bool:
+        code, _, _ = await self.sh_with_code(command, stdin=stdin, env=env)
+        return code == 0
+
     async def sh(self, command, stdin=None, env=None) -> str:
         """Runs a shell command within the given context. Raises an AssertionError if it exits with
         a non-zero exitcode. Returns STDOUT encoded with utf-8."""
