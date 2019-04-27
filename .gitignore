@@ -1,7 +1,12 @@
 /env
 *.pyc
-/tasks
 __pycache__
 /state.yml
 .DS_Store
-/crew/tasks/private
+
+/build
+/out
+/dist
+/pkg
+/pitcrew.egg-info
+/pitcrew/tasks/private
