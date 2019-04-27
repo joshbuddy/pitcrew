@@ -15,7 +15,9 @@ homebrew or apt-get.
         git_config = await self.fs.read(
             os.path.join(self.params.destination, ".git", "config")
         )
-        assert self.params.url in git_config.decode()
+        assert (
+            self.params.url in git_config.decode()
+        ), f"url {self.params.url} couldn't be found in the .git/config"
 
     async def run(self):
         command = f"git clone {self.params.esc_url} {self.params.esc_destination}"
