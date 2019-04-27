@@ -1,7 +1,7 @@
 from pitcrew import task
 
 
-@task.opt("dest", desc="The directory to install crew in", type=str, default="crew")
+@task.opt("dest", desc="The directory to install crew in", type=str, default="pitcrew")
 class CrewInstall(task.BaseTask):
     """Installs crew in the path specified"""
 
@@ -54,6 +54,20 @@ class CrewInstallTest(task.TaskTest):
     async def test_ubuntu(self):
         with self.cd("/tmp"):
             # put this in to test the local copy you've got
-            await self.local_context.file(".").copy_to(self.file("/tmp/crew"))
-            await self.sh("rm -rf /tmp/crew/env")
+            await self.local_context.file(".").copy_to(self.file("/tmp/pitcrew"))
+            await self.sh("rm -rf /tmp/pitcrew/env")
+            await self.fs.write(
+                "/tmp/pitcrew/.git/config",
+                b"""[core]
+    repositoryformatversion = 0
+    filemode = true
+    bare = false
+    logallrefupdates = true
+    ignorecase = true
+    precomposeunicode = true
+[remote "origin"]
+    url = https://github.com/joshbuddy/pitcrew.git
+    fetch = +refs/heads/*:refs/remotes/origin/*
+""",
+            )
             await self.crew.install()
