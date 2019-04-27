@@ -686,7 +686,7 @@ class Build(task.BaseTask):
     """Builds the website in the `out` directory."""
 
     async def run(self):
-        await self.sh("bin/crew docs")
+        await self.sh("crew docs")
         await self.sh("rm -rf out")
         await self.sh("mkdir out")
         await self.task_file("water.css").copy_to(self.file("out/water.css"))

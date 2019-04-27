@@ -13,11 +13,11 @@ This allows an ad-hoc command to be run across a set of contexts.
 
 List your root folder locally
 
-`bin/crew sh ls /`
+`crew sh ls /`
 
 Get the time on 100 machines
 
-`bin/crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' date`
+`crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' date`
 
 ## `crew run [task-name] <task-args>`
 
@@ -32,11 +32,11 @@ This runs a command across a set of contexts.
 
 Create a file at `./foo` with the contents "bar".
 
-`bin/crew run fs.write foo bar`
+`crew run fs.write foo bar`
 
 Install an apt package over ssh
 
-`bin/crew run -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1"]}' apt_get.install python3.6`
+`crew run -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1"]}' apt_get.install python3.6`
 
 ## `crew list`
 
@@ -59,11 +59,11 @@ matching the prefix
 
 This will run all task tests.
 
-`bin/crew test`
+`crew test`
 
 To only run tests for tasks starting with `fs.` run:
 
-`bin/crew test fs.`
+`crew test fs.`
 
 ## `crew docs`
 

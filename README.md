@@ -10,15 +10,15 @@ Pitcrew makes it easy to run commands on one or a lot of machines.
 
 ### Get the time on 100 machines at once
 
-`bin/crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' date`
+`crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' date`
 
 ### Install Homebrew on a Mac
 
-`bin/crew run install.homebrew`
+`crew run install.homebrew`
 
 ### Host a website using S3, CloudFront & SSL
 
-`bin/crew run examples.deploy_pitcrew`
+`crew run examples.deploy_pitcrew`
 
 ## Installation
 
@@ -29,7 +29,8 @@ To install pitcrew in your home directory, run the following:
 ```
 curl -fsSL https://github.com/joshbuddy/pitcrew/releases/latest/download/crew-darwin > crew
 chmod u+x crew
-./crew run crew.install --dest=~/crew
+./crew run crew.install --dest="$HOME/crew"
+ln -fs "$HOME/Development/crew/env/bin/crew" /usr/local/bin/crew
 ```
 
 ### Hard mode
@@ -90,26 +91,26 @@ For detailed usage, see [docs/cli.md](docs/cli.md) for more details.
 
 Pitcrew allows running a command using `bin/crew sh -- [shell command]`.
 
-For example `bin/crew sh -- ls /` will list the "/" directory locally.
+For example `crew sh ls /` will list the "/" directory locally.
 
-You can run this across three hosts via ssh using `bin/crew sh -p providers.ssh -P '{"hosts": ["192.168.0.1", "192.168.0.2", "192.168.0.3"]}' -- ls /`.
+You can run this across three hosts via ssh using `crew sh -p providers.ssh -P '{"hosts": ["192.168.0.1", "192.168.0.2", "192.168.0.3"]}' ls /`.
 
 ### Run a task
 
-Pitcrew allows running a task using `bin/crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider.
+Pitcrew allows running a task using `crew run [task name] <task args>`. This will normally target your local machine unless you use the `-p` flag to select a different provider.
 
 ### See available tasks
 
-To see all the available tasks run `bin/crew list`. This will show all available tasks which are stored in `crew/tasks`.
+To see all the available tasks run `crew list`. This will show all available tasks which are stored in `crew/tasks`.
 
 ### Make a new task
 
-To see all the available tasks run `bin/crew new [task_name]`. This will create a template of a new task.
+To see all the available tasks run `crew new [task_name]`. This will create a template of a new task.
 
 ### Run tests
 
-To run an ad-hoc command use . For tasks use `bin/crew run [task-name] <args>`.
+To run an ad-hoc command use . For tasks use `crew run [task-name] <args>`.
 
 ### Get CLI help
 
-To see the whole list of commands available from the command-line, run `bin/crew help`.
+To see the whole list of commands available from the command-line, run `crew help`.
