@@ -1610,22 +1610,16 @@ A provider for ssh contexts
 
 ```python
 from pitcrew import task
-from pitcrew.cidrize import cidrize
+from netaddr.ip.nmap import iter_nmap_range
 
 
 class SSHProvider:
     def __init__(self, context, hosts, user):
         self.context = context
         self.hosts = hosts
-
-        self.flattened_hosts = []
-
-        for host in self.hosts:
-            networks = cidrize(host)
-            for n in networks:
-                for ip in n.iter_hosts():
-                    self.flattened_hosts.append(str(ip))
-
+        self.flattened_hosts = list(
+            map(lambda ip: str(ip), iter_nmap_range(*self.hosts))
+        )
         self.user = user
         self.index = 0
 
