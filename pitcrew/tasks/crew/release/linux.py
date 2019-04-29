@@ -3,6 +3,8 @@ from pitcrew import task
 
 @task.arg("version", desc="The version to release", type=str)
 class CrewBuildLinux(task.BaseTask):
+    """This creates a PyInstaller build for crew on Linux"""
+
     async def run(self):
         container_id = await self.docker.run("ubuntu", detach=True, interactive=True)
         docker_ctx = self.docker_context(container_id, user="root")

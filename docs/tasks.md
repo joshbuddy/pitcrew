@@ -173,7 +173,7 @@ class CrewInstallTest(task.TaskTest):
 
 ## crew.release
 
-⚠️ *No task description set*
+This creates a release for crew
 
 ### Arguments
 
@@ -194,6 +194,8 @@ from pitcrew import task
 @task.arg("version", desc="The version to release", type=str)
 @task.arg("name", desc="The name of the release", type=str)
 class CrewRelease(task.BaseTask):
+    """This creates a release for crew"""
+
     async def run(self):
         current_branch = (await self.sh("git rev-parse --abbrev-ref HEAD")).strip()
         assert "master" == current_branch, "not on master"
@@ -215,7 +217,7 @@ class CrewRelease(task.BaseTask):
 
 ## crew.release.darwin
 
-⚠️ *No task description set*
+This creates a PyInstaller build for crew on Darwin
 
 ### Arguments
 
@@ -233,6 +235,8 @@ from pitcrew import task
 
 @task.arg("version", desc="The version to release", type=str)
 class CrewBuildDarwin(task.BaseTask):
+    """This creates a PyInstaller build for crew on Darwin"""
+
     async def run(self):
         assert await self.facts.system.uname() == "darwin"
         await self.sh("make build")
@@ -247,7 +251,7 @@ class CrewBuildDarwin(task.BaseTask):
 
 ## crew.release.linux
 
-⚠️ *No task description set*
+This creates a PyInstaller build for crew on Linux
 
 ### Arguments
 
@@ -265,6 +269,8 @@ from pitcrew import task
 
 @task.arg("version", desc="The version to release", type=str)
 class CrewBuildLinux(task.BaseTask):
+    """This creates a PyInstaller build for crew on Linux"""
+
     async def run(self):
         container_id = await self.docker.run("ubuntu", detach=True, interactive=True)
         docker_ctx = self.docker_context(container_id, user="root")

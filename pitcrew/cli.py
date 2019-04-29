@@ -135,11 +135,15 @@ def info(ctx, *, task_name):
 
 
 @cli.command(short_help="generate docs")
+@click.option("--check/--no-check", "-c", default=False)
 @click.pass_context
-def docs(ctx):
+def docs(ctx, check):
     """Regenerates docs."""
 
-    html = App().docs().generate()
+    docs = App().docs()
+    if check:
+        docs.check()
+    html = docs.generate()
     with open("docs/tasks.md", "w") as fh:
         fh.write(html)
 

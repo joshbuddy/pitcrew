@@ -5,6 +5,8 @@ from pitcrew import task
 @task.arg("version", desc="The version to release", type=str)
 @task.arg("name", desc="The name of the release", type=str)
 class CrewRelease(task.BaseTask):
+    """This creates a release for crew"""
+
     async def run(self):
         current_branch = (await self.sh("git rev-parse --abbrev-ref HEAD")).strip()
         assert "master" == current_branch, "not on master"
