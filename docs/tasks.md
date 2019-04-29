@@ -184,7 +184,6 @@ This creates a release for crew
 
 
 - version *(str)* : The version to release
-- name *(str)* : The name of the release
 
 
 
@@ -197,7 +196,6 @@ from pitcrew import task
 
 
 @task.arg("version", desc="The version to release", type=str)
-@task.arg("name", desc="The name of the release", type=str)
 class CrewRelease(task.BaseTask):
     """This creates a release for crew"""
 
@@ -211,8 +209,9 @@ class CrewRelease(task.BaseTask):
             self.crew.release.linux(self.params.version),
         )
         await self.sh(
-            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.params.esc_name} {self.esc('pkg/*')}"
+            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish {self.esc('pkg/*')}"
         )
+        await self.sh("env/bin/python setup.py upload")
 
 ```
 
@@ -245,7 +244,7 @@ class CrewBuildDarwin(task.BaseTask):
     async def run(self):
         assert await self.facts.system.uname() == "darwin"
         await self.sh("make build")
-        target = f"pkg/crew-{self.params.version}-darwin"
+        target = f"pkg/crew-{self.params.version}-Darwin"
         await self.sh(f"cp dist/crew {target}")
 
 ```
@@ -294,7 +293,7 @@ class CrewBuildLinux(task.BaseTask):
                 await docker_ctx.sh("python3.6 -m venv --clear env")
                 await docker_ctx.sh("env/bin/pip install -r requirements.txt")
                 await docker_ctx.sh("make build")
-                target = f"pkg/crew-{self.params.version}-linux"
+                target = f"pkg/crew-{self.params.version}-Linux"
                 await docker_ctx.file("/tmp/crew/dist/crew").copy_to(self.file(target))
 
 ```
