@@ -140,14 +140,21 @@ class BaseTask(ABC):
         for arg in self.args:
             value = arg.default
             if arg.required and len(incoming_args) != 0:
-                value = arg.process(incoming_args.pop(0), self.use_coersion)
+                if arg.remaining:
+                    value = []
+                    while len(incoming_args) != 0:
+                        value.append(
+                            arg.process(incoming_args.pop(0), self.use_coersion)
+                        )
+                else:
+                    value = arg.process(incoming_args.pop(0), self.use_coersion)
             elif arg.name in incoming_kwargs:
                 value = arg.process(
                     incoming_kwargs.pop(arg.name, None), self.use_coersion
                 )
 
             params._set_attr(arg.name, value)
-            if value and arg.type == str:
+            if value and arg.type == str and not arg.remaining:
                 esc_value = self.esc(value)
                 setattr(params, f"esc_{arg.name}", esc_value)
 
@@ -241,7 +248,14 @@ class BaseTask(ABC):
 
 class Argument:
     def __init__(
-        self, task_class, name, type=None, default=None, required=True, desc=None
+        self,
+        task_class,
+        name,
+        type=None,
+        default=None,
+        required=True,
+        desc=None,
+        remaining=False,
     ):
         if name == "env":
             raise ValueError("`env' is a reserved argument name")
@@ -251,6 +265,7 @@ class Argument:
         self.default = default
         self.required = required
         self.desc = desc
+        self.remaining = remaining
 
     def process(self, value, use_coersion=False):
         if use_coersion:
@@ -293,6 +308,14 @@ def arg(name, type=None, **kwargs):
 
     def decorator(cls):
         cls._args().insert(0, Argument(cls, name, type, **kwargs))
+        return cls
+
+    return decorator
+
+
+def varargs(name, type=None, **kwargs):
+    def decorator(cls):
+        cls._args().insert(0, Argument(cls, name, type, remaining=True, **kwargs))
         return cls
 
     return decorator

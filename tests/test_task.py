@@ -65,3 +65,12 @@ class TestTask(aiounittest.AsyncTestCase):
         task_instance = Task()
         with self.assertRaises(TypeError):
             await task_instance.invoke("asd", "qwe")
+
+    async def test_varargs(self):
+        @task.varargs("one", type=str)
+        class Task(task.BaseTask):
+            async def run(self):
+                assert self.params.one == ["one", "two", "three"]
+
+        task_instance = Task()
+        await task_instance.invoke("one", "two", "three")
