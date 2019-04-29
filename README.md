@@ -22,18 +22,26 @@ Pitcrew makes it easy to run commands on one or a lot of machines.
 
 ## Installation
 
-### Easy mode
+### From binary
 
 To install pitcrew in your home directory, run the following:
 
 ```
-curl -fsSL https://github.com/joshbuddy/pitcrew/releases/latest/download/crew-darwin > crew
+curl -fsSL "https://github.com/joshbuddy/pitcrew/releases/latest/download/crew-$(uname)" > crew
 chmod u+x crew
 ./crew run crew.install --dest="$HOME/crew"
-ln -fs "$HOME/Development/crew/env/bin/crew" /usr/local/bin/crew
 ```
 
-### Hard mode
+### From PyPi
+
+To install from the Python Package Index, run the following:
+
+```
+pip install pitcrew
+crew run crew.install --dest="$HOME/crew"
+```
+
+### From source
 
 ```
 git clone https://github.com/joshbuddy/pitcrew
