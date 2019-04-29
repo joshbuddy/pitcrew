@@ -19,3 +19,4 @@ class CrewRelease(task.BaseTask):
         await self.sh(
             f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.params.esc_name} {self.esc('pkg/*')}"
         )
+        await self.sh("env/bin/python setup.py upload")
