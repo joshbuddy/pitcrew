@@ -3,7 +3,6 @@ from pitcrew import task
 
 
 @task.arg("version", desc="The version to release", type=str)
-@task.arg("name", desc="The name of the release", type=str)
 class CrewRelease(task.BaseTask):
     """This creates a release for crew"""
 
@@ -17,6 +16,6 @@ class CrewRelease(task.BaseTask):
             self.crew.release.linux(self.params.version),
         )
         await self.sh(
-            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish --name {self.params.esc_name} {self.esc('pkg/*')}"
+            f"env/bin/githubrelease release joshbuddy/pitcrew create {self.params.version} --publish {self.esc('pkg/*')}"
         )
         await self.sh("env/bin/python setup.py upload")
