@@ -7,12 +7,12 @@ Install a package using apt-get
 ### Arguments
 
 
-- name *(str)* : The package to install
+- packages *(str)* : The package to install
 
 
 ### Returns
 
-*(str)* The version of the installed package
+*(list)* The version of the installed package
 
 
 <details>
@@ -23,25 +23,32 @@ import re
 from pitcrew import task
 
 
-@task.arg("name", type=str, desc="The package to install")
+@task.varargs("packages", type=str, desc="The package to install")
 @task.returns("The version of the installed package")
 class AptgetInstall(task.BaseTask):
     """Install a package using apt-get"""
 
-    async def verify(self) -> str:
-        policy_output = await self.sh(f"apt-cache policy {self.params.esc_name}")
+    async def verify(self) -> list:
+        versions = []
+        for p in self.params.packages:
+            versions.append(await self.get_version(p))
+        return versions
+
+    async def run(self):
+        packages = " ".join(map(lambda p: self.esc(p), self.params.packages))
+        return await self.sh(f"apt-get install -y {packages}")
+
+    async def available(self) -> bool:
+        code, _, _ = await self.sh_with_code("which apt-get")
+        return code == 0
+
+    async def get_version(self, name) -> str:
+        policy_output = await self.sh(f"apt-cache policy {self.esc(name)}")
         m = re.search("Installed: (.*?)\n", policy_output)
         assert m, "no version found"
         installed_version = m.group(1)
         assert installed_version != "(none)", "Installed version is (none)"
         return installed_version
-
-    async def run(self):
-        return await self.sh(f"apt-get install -y {self.params.esc_name}")
-
-    async def available(self) -> bool:
-        code, _, _ = await self.sh_with_code("which apt-get")
-        return code == 0
 
 ```
 
@@ -83,7 +90,7 @@ Installs crew in the path specified
 ### Arguments
 
 
-- dest *(str)* : The directory to install crew in
+- dest *(list)* : The directory to install crew in
 
 
 
@@ -94,7 +101,7 @@ Installs crew in the path specified
 from pitcrew import task
 
 
-@task.opt("dest", desc="The directory to install crew in", type=str, default="pitcrew")
+@task.opt("dest", desc="The directory to install crew in", type=list, default="pitcrew")
 class CrewInstall(task.BaseTask):
     """Installs crew in the path specified"""
 
@@ -118,11 +125,9 @@ class CrewInstall(task.BaseTask):
         elif platform == "linux":
             if await self.sh_ok("which apt-get"):
                 await self.apt_get.update()
-                await self.apt_get.install("apt-utils")
-                await self.apt_get.install("git")
-                await self.apt_get.install("python3.7")
-                await self.apt_get.install("python3.7-dev")
-                await self.apt_get.install("python3.7-venv")
+                await self.apt_get.install(
+                    "apt-utils", "git", "python3.7", "python3.7-dev", "python3.7-venv"
+                )
                 await self.sh(
                     "apt-get install -y python3.7-distutils",
                     env={"DEBIAN_FRONTEND": "noninteractive"},

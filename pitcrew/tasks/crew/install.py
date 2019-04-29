@@ -1,7 +1,7 @@
 from pitcrew import task
 
 
-@task.opt("dest", desc="The directory to install crew in", type=str, default="pitcrew")
+@task.opt("dest", desc="The directory to install crew in", type=list, default="pitcrew")
 class CrewInstall(task.BaseTask):
     """Installs crew in the path specified"""
 
@@ -25,11 +25,9 @@ class CrewInstall(task.BaseTask):
         elif platform == "linux":
             if await self.sh_ok("which apt-get"):
                 await self.apt_get.update()
-                await self.apt_get.install("apt-utils")
-                await self.apt_get.install("git")
-                await self.apt_get.install("python3.7")
-                await self.apt_get.install("python3.7-dev")
-                await self.apt_get.install("python3.7-venv")
+                await self.apt_get.install(
+                    "apt-utils", "git", "python3.7", "python3.7-dev", "python3.7-venv"
+                )
                 await self.sh(
                     "apt-get install -y python3.7-distutils",
                     env={"DEBIAN_FRONTEND": "noninteractive"},
