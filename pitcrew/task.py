@@ -61,21 +61,6 @@ from pitcrew.test.util import ubuntu_decorator
 from abc import ABC, abstractmethod
 
 
-class TaskStateVariable:
-    def __init__(self, task, selector):
-        self.task = task
-        self.selector = selector
-
-    def get(self):
-        return self.task.context.state.get(self.key())
-
-    def set(self, value):
-        self.task.context.state.set(self.key(), value)
-
-    def key(self):
-        return ".".join([self.task.task_name, *self.selector])
-
-
 class Parameters:
     def __init__(self):
         self.__dict = {}
@@ -238,9 +223,6 @@ class BaseTask(ABC):
 
     async def _invoke_without_verify(self):
         return self._enforce_return_type(await self.run())
-
-    def state_variable(self, *selector):
-        return TaskStateVariable(self, selector)
 
     def template(self, name):
         template_path = os.path.abspath(

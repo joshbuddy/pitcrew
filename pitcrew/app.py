@@ -4,7 +4,6 @@ import atexit
 import shutil
 import jinja2
 from pitcrew.loader import Loader
-from pitcrew.state import FileState, NullState
 from pitcrew.context import LocalContext
 from pitcrew.docs import Docs
 from pitcrew.test import TestRunner
@@ -16,9 +15,8 @@ class App:
         self.template_render_path = os.path.join("/tmp", "crew", "templates")
         atexit.register(self.delete_rendered_templates)
         os.makedirs(self.template_render_path, exist_ok=True)
-        self.state = FileState(os.path.join(os.getcwd(), "state.yml"))
         self.loader = Loader()
-        self.local_context = LocalContext(self, self.loader, self.state)
+        self.local_context = LocalContext(self, self.loader)
 
     def executor(self, *args, **kwargs):
         return Executor(*args, **kwargs)
@@ -31,7 +29,7 @@ class App:
         return Docs(self)
 
     def test_runner(self):
-        return TestRunner(self, LocalContext(self, self.loader, NullState()))
+        return TestRunner(self, LocalContext(self, self.loader))
 
     def create_task(self, name):
         path = os.path.realpath(os.path.join(__file__, "..", "templates"))
@@ -62,11 +60,10 @@ class App:
             fh.write(rendered_task)
 
     async def __aenter__(self):
-        await self.state.load()
         return self
 
     async def __aexit__(self, exc_type, exc, tb):
-        await self.state.save()
+        pass
 
     def delete_rendered_templates(self):
         shutil.rmtree(self.template_render_path, ignore_errors=True)

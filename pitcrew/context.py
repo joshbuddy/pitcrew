@@ -59,12 +59,9 @@ class ChangeDirectory:
 class Context(ABC):
     """Abstract base class for all contexts."""
 
-    def __init__(
-        self, app, loader, state, user=None, parent_context=None, directory=None
-    ):
+    def __init__(self, app, loader, user=None, parent_context=None, directory=None):
         self.app = app
         self.loader = loader
-        self.state = state
         self.user = user or getpass.getuser()
         self.directory = directory
         self.actual_user = None
@@ -106,14 +103,12 @@ class Context(ABC):
     def docker_context(self, *args, **kwargs) -> "DockerContext":
         """Creates a new docker context with the given container id."""
         return DockerContext(
-            self.app, self.loader, self.state, *args, **kwargs, parent_context=self
+            self.app, self.loader, *args, **kwargs, parent_context=self
         )
 
     def ssh_context(self, *args, **kwargs) -> "SSHContext":
         """Creates a new ssh context with the given container id."""
-        return SSHContext(
-            self.app, self.loader, self.state, *args, **kwargs, parent_context=self
-        )
+        return SSHContext(self.app, self.loader, *args, **kwargs, parent_context=self)
 
     async def fill_actual_user(self):
         if self.actual_user:
@@ -226,7 +221,6 @@ class SSHContext(Context):
         self,
         app,
         loader,
-        state,
         host,
         port=22,
         user=None,
@@ -239,7 +233,7 @@ class SSHContext(Context):
         self.connection = None
         self.connect_timeout = 1
         self.connection_kwargs = connection_kwargs
-        super().__init__(app, loader, state, user=user, parent_context=parent_context)
+        super().__init__(app, loader, user=user, parent_context=parent_context)
 
     async def sh_with_code(self, command, stdin=None, env=None):
         command = await self._prepare_command(command)
@@ -273,9 +267,9 @@ class SSHContext(Context):
 class DockerContext(Context):
     file_class = DockerFile
 
-    def __init__(self, app, loader, state, container_id, **kwargs):
+    def __init__(self, app, loader, container_id, **kwargs):
         self.container_id = container_id
-        super().__init__(app, loader, state, **kwargs)
+        super().__init__(app, loader, **kwargs)
 
     async def sh_with_code(self, command, stdin=None, env=None):
         command = await self._prepare_command(command)
