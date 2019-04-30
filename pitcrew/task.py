@@ -128,8 +128,12 @@ class BaseTask(ABC):
 
     @classmethod
     def source(cls):
-        with open(inspect.getfile(cls)) as fh:
+        with open(cls.source_path()) as fh:
             return fh.read()
+
+    @classmethod
+    def source_path(cls):
+        return inspect.getfile(cls)
 
     def __getattr__(self, name):
         return getattr(self.context, name)
@@ -184,14 +188,17 @@ class BaseTask(ABC):
         self.use_coersion = use_coersion
 
     def invoke_sync(self, *args, **kwargs):
+        """Invokes the task synchronously and returns the result."""
         if inspect.iscoroutinefunction(self.invoke):
             loop = asyncio.get_event_loop()
-            loop.run_until_complete(self.invoke(*args, **kwargs))
+            ret_value = loop.run_until_complete(self.invoke(*args, **kwargs))
             loop.close()
+            return ret_value
         else:
-            self.invoke(*args, **kwargs)
+            return self.invoke(*args, **kwargs)
 
     def task_file(self, path):
+        """Gets a file relative to the task being executed."""
         file_path = os.path.abspath(
             os.path.join(inspect.getfile(self.__class__), "..", path)
         )

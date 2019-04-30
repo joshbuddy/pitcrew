@@ -1,4 +1,5 @@
 import re
+import asyncio
 from pitcrew import task
 
 
@@ -11,7 +12,7 @@ class CrewRelease(task.BaseTask):
         assert "master" == current_branch, "not on master"
         assert re.match(r"\d+\.\d+\.\d+", self.params.version)
         await self.sh("mkdir -p pkg")
-        await self.run_all(
+        await asyncio.gather(
             self.crew.release.darwin(self.params.version),
             self.crew.release.linux(self.params.version),
         )

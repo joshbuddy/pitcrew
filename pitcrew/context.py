@@ -80,10 +80,6 @@ class Context(ABC):
     def descriptor(self) -> str:
         pass
 
-    async def run_all(self, *tasks):
-        for f in asyncio.as_completed(tasks):
-            await f
-
     async def sh_ok(self, command, stdin=None, env=None) -> bool:
         code, _, _ = await self.sh_with_code(command, stdin=stdin, env=env)
         return code == 0

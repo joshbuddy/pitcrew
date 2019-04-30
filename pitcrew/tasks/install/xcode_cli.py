@@ -2,7 +2,7 @@ from pitcrew import task
 
 
 class InstallXcodeCli(task.BaseTask):
-    """Ensures xcode is installed"""
+    """Installs xcode cli tools"""
 
     async def verify(self):
         assert await self.fs.is_directory("/Library/Developer/CommandLineTools")

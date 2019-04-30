@@ -1,7 +1,7 @@
 .PHONY: docs
 
 docs:
-	PYTHONPATH=. pydocmd simple pitcrew.task++  pitcrew.context++ > docs/api.md
+	PYTHONPATH=. pydocmd simple pitcrew.task++  pitcrew.context++ pitcrew.file++ > docs/api.md
 
 .PHONY: build
 

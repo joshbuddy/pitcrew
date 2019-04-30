@@ -1,24 +1,63 @@
 # 🔧 Pitcrew
 
-AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh.
+AsyncIO-powered python DSL for running commands locally, on docker, or over ssh.
 
 [![CircleCI](https://circleci.com/gh/joshbuddy/pitcrew.svg?style=svg)](https://circleci.com/gh/joshbuddy/pitcrew)
 
-## At a glance
+## What does Pitcrew do?
 
-Pitcrew makes it easy to run commands on one or a lot of machines.
-
-### Get the time on 100 machines at once
-
-`crew sh -p providers.ssh -P '{"user": "root", "hosts": ["192.168.0.1-100"]}' date`
-
-### Install Homebrew on a Mac
-
-`crew run install.homebrew`
-
-### Host a website using S3, CloudFront & SSL
-
-`crew run examples.deploy_pitcrew`
+<table>
+    <tr>
+        <td>Pitcrew can run commands</td>
+        <td><code>
+            $ crew sh date
+        </code></td>
+    </tr>
+    <tr>
+        <td>...or over ssh</td>
+        <td><code>
+            $ crew sh -p providers.ssh -P '{"hosts": ["192.168.0.1"]}' date
+        </code></td>
+    </tr>
+    <tr>
+        <td>on hundreds of hosts!</td>
+        <td><code>
+            $ crew sh -p providers.ssh -P '{"hosts": ["192.168.0.1-100"]}' date
+        </code></td>
+    </tr>
+    <tr>
+        <td>Crew can also run tasks</td>
+        <td><code>
+            $ crew run install.homebrew
+        </code></td>
+    </tr>
+    <tr>
+        <td>Tasks are either other shell commands, or other tasks, for example,
+        this provisions Cloudfront, SSL and S3 and builds and deploys docs to pitcrew.io</td>
+        <td><code>
+            $ crew run examples.deploy_pitcrew
+        </code></td>
+    </tr>
+    <tr>
+        <td>You can list available tasks</td>
+        <td><code>
+            $ crew list
+        </code></td>
+    </tr>
+    <tr>
+        <td>...edit an existing task</td>
+        <td><code>
+            $ crew edit examples.deploy_pitcrew
+            # opens in $EDITOR
+        </code></td>
+    </tr>
+    <tr>
+        <td>or create a new task!</td>
+        <td><code>
+            $ crew new some.new.task
+        </code></td>
+    </tr>
+</table>
 
 ## Installation
 
