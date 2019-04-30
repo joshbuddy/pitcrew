@@ -2,9 +2,10 @@ from pitcrew import task
 
 
 class InstallHomebrew(task.BaseTask):
-    """Ensures xcode is installed"""
+    """Installs the homebrew package manager"""
 
     async def verify(self):
+        await self.install.xcode_cli()
         assert await self.sh("which brew")
 
     async def run(self):

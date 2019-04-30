@@ -1,6 +1,6 @@
 __name__ = "pitcrew"
 __description__ = (
-    "AsyncIO-powered python DSL for running tasks locally, on docker, or over ssh."
+    "AsyncIO-powered python DSL for running commands locally, on docker, or over ssh."
 )
 __url__ = "http://pitcrew.io"
 __author__ = "joshbuddy"

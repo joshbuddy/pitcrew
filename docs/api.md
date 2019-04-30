@@ -1,4 +1,4 @@
-# crew.task
+# pitcrew.task
 
 Tasks are defined by putting them in the crew/tasks directory. Tasks must inherit
 from `crew.task.BaseTask`. Inside a task the main ways of interacting with the
@@ -79,6 +79,16 @@ bool(x) -> bool
 Returns True when the argument x is true, False otherwise.
 The builtins True and False are the only two instances of the class bool.
 The class bool is a subclass of the class int, and cannot be subclassed.
+### invoke_sync
+```python
+BaseTask.invoke_sync(self, *args, **kwargs)
+```
+Invokes the task synchronously and returns the result.
+### task_file
+```python
+BaseTask.task_file(self, path)
+```
+Gets a file relative to the task being executed.
 ## arg
 ```python
 arg(name, type=None, **kwargs)
@@ -104,7 +114,7 @@ Decorator to instruct task to memoize return within the context's cache.
 nodoc()
 ```
 Decorator to instruct task to not generate documentation for test.
-# crew.context
+# pitcrew.context
 Contexts allow execution of tasks. There are currently three types of
 contexts: local, ssh and docker.
 
@@ -126,19 +136,9 @@ ChangeDirectory(self, context, new_directory)
 Context manager to allow changing the current directory within a context
 ## Context
 ```python
-Context(self, app, loader, state, user=None, parent_context=None, directory=None)
+Context(self, app, loader, user=None, parent_context=None, directory=None)
 ```
 Abstract base class for all contexts.
-### cache
-dict() -> new empty dictionary
-dict(mapping) -> new dictionary initialized from a mapping object's
-    (key, value) pairs
-dict(iterable) -> new dictionary initialized as if via:
-    d = {}
-    for k, v in iterable:
-        d[k] = v
-dict(**kwargs) -> new dictionary initialized with the name=value pairs
-    in the keyword argument list.  For example:  dict(one=1, two=2)
 ### sh
 ```python
 Context.sh(self, command, stdin=None, env=None) -> str
@@ -170,3 +170,69 @@ Returns a context handler for changing the directory
 Context.invoke(self, fn, *args, **kwargs)
 ```
 Allows invoking of an async function within this context.
+## LocalContext
+```python
+LocalContext(self, app, loader, user=None, parent_context=None, directory=None)
+```
+
+### LocalFile
+```python
+LocalContext.LocalFile(self, context, path)
+```
+A reference to a file on the local machine executing pitcrew
+## SSHContext
+```python
+SSHContext(self, app, loader, host, port=22, user=None, parent_context=None, **connection_kwargs)
+```
+
+### SSHFile
+```python
+SSHContext.SSHFile(self, context, path)
+```
+A reference to a file on a remote host accessible via SSH
+## DockerContext
+```python
+DockerContext(self, app, loader, container_id, **kwargs)
+```
+
+### DockerFile
+```python
+DockerContext.DockerFile(self, context, path)
+```
+A reference to a file on a Docker container
+# pitcrew.file
+File objects are created through their respective contexts. A file object can be copied into
+another context via a file reference for the destination. For example, if operating in an SSH
+context, this would copy from the local filesystem to that destination:
+
+    self.local_context("/some/file").copy_to(self.file("/some/other"))
+
+
+For convenience `owner`, `group` and `mode` arguments are available on the `copy_to` method to
+allow setting those attributes post-copy.
+
+## File
+```python
+File(self, context, path)
+```
+Abstract base class for file-based operations
+### copy_to
+```python
+File.copy_to(self, dest, archive=False, owner=None, group=None, mode=None)
+```
+Copies a file from the source to the destination.
+## LocalFile
+```python
+LocalFile(self, context, path)
+```
+A reference to a file on the local machine executing pitcrew
+## DockerFile
+```python
+DockerFile(self, context, path)
+```
+A reference to a file on a Docker container
+## SSHFile
+```python
+SSHFile(self, context, path)
+```
+A reference to a file on a remote host accessible via SSH

@@ -1,9 +1,23 @@
+"""File objects are created through their respective contexts. A file object can be copied into
+another context via a file reference for the destination. For example, if operating in an SSH
+context, this would copy from the local filesystem to that destination:
+
+    self.local_context("/some/file").copy_to(self.file("/some/other"))
+
+
+For convenience `owner`, `group` and `mode` arguments are available on the `copy_to` method to
+allow setting those attributes post-copy.
+"""
+
 import os
 import asyncssh
 from pitcrew.logger import logger
+from abc import ABC
 
 
-class File:
+class File(ABC):
+    """Abstract base class for file-based operations"""
+
     def __init__(self, context, path):
         self.context = context
         self.path = path
@@ -12,6 +26,7 @@ class File:
         return f"{self.context.descriptor()}:{self.path}"
 
     async def copy_to(self, dest, archive=False, owner=None, group=None, mode=None):
+        """Copies a file from the source to the destination."""
         with logger.with_copy(self, dest):
             pair = (self.__class__, dest.__class__)
             if pair in copiers:
@@ -25,16 +40,22 @@ class File:
 
 
 class LocalFile(File):
+    """A reference to a file on the local machine executing pitcrew"""
+
     def __init__(self, context, path):
         self.context = context
         self.path = os.path.expanduser(path)
 
 
 class DockerFile(File):
+    """A reference to a file on a Docker container"""
+
     pass
 
 
 class SSHFile(File):
+    """A reference to a file on a remote host accessible via SSH"""
+
     pass
 
 

@@ -1,5 +1,6 @@
 import os
 import re
+import asyncio
 from pitcrew import task
 
 
@@ -7,9 +8,14 @@ class Build(task.BaseTask):
     """Builds the website in the `out` directory."""
 
     async def run(self):
+        # create docs for python stuff
+        await self.sh("make docs")
+        # create task specific docs
         await self.sh("crew docs")
+        # re-create out directory
         await self.sh("rm -rf out")
         await self.sh("mkdir out")
+        # copy our css
         await self.task_file("water.css").copy_to(self.file("out/water.css"))
 
         docs = []
@@ -19,7 +25,7 @@ class Build(task.BaseTask):
             target = f"out/docs/{os.path.splitext(name)[0]}.html"
             docs.append(self.generate_doc(f"docs/{f}", target))
         docs.append(self.generate_doc("README.md", "out/index.html"))
-        await self.run_all(*docs)
+        await asyncio.gather(*docs)
 
     async def generate_doc(self, source, target):
         out = await self.sh(

@@ -192,6 +192,7 @@ This creates a release for crew
 
 ```python
 import re
+import asyncio
 from pitcrew import task
 
 
@@ -204,7 +205,7 @@ class CrewRelease(task.BaseTask):
         assert "master" == current_branch, "not on master"
         assert re.match(r"\d+\.\d+\.\d+", self.params.version)
         await self.sh("mkdir -p pkg")
-        await self.run_all(
+        await asyncio.gather(
             self.crew.release.darwin(self.params.version),
             self.crew.release.linux(self.params.version),
         )
@@ -244,7 +245,7 @@ class CrewBuildDarwin(task.BaseTask):
     async def run(self):
         assert await self.facts.system.uname() == "darwin"
         await self.sh("make build")
-        target = f"pkg/crew-{self.params.version}-Darwin"
+        target = f"pkg/crew-Darwin"
         await self.sh(f"cp dist/crew {target}")
 
 ```
@@ -293,7 +294,7 @@ class CrewBuildLinux(task.BaseTask):
                 await docker_ctx.sh("python3.6 -m venv --clear env")
                 await docker_ctx.sh("env/bin/pip install -r requirements.txt")
                 await docker_ctx.sh("make build")
-                target = f"pkg/crew-{self.params.version}-Linux"
+                target = f"pkg/crew-Linux"
                 await docker_ctx.file("/tmp/crew/dist/crew").copy_to(self.file(target))
 
 ```
@@ -477,6 +478,7 @@ This example builds and deploys pitcrew.io. It uses s3, cloudfront and acm to de
 
 ```python
 import json
+import asyncio
 from pitcrew import task
 from uuid import uuid4
 
@@ -489,7 +491,7 @@ class DeployPitcrew(task.BaseTask):
         # create the bucket
         await self.sh("aws s3api create-bucket --bucket pitcrew-site")
         # setup aws & build + upload site
-        await self.run_all(self.setup_aws(), self.build_and_sync())
+        await asyncio.gather(self.setup_aws(), self.build_and_sync())
 
     async def setup_aws(self):
         # first find the zone
@@ -659,6 +661,7 @@ Builds the website in the `out` directory.
 ```python
 import os
 import re
+import asyncio
 from pitcrew import task
 
 
@@ -666,9 +669,14 @@ class Build(task.BaseTask):
     """Builds the website in the `out` directory."""
 
     async def run(self):
+        # create docs for python stuff
+        await self.sh("make docs")
+        # create task specific docs
         await self.sh("crew docs")
+        # re-create out directory
         await self.sh("rm -rf out")
         await self.sh("mkdir out")
+        # copy our css
         await self.task_file("water.css").copy_to(self.file("out/water.css"))
 
         docs = []
@@ -678,7 +686,7 @@ class Build(task.BaseTask):
             target = f"out/docs/{os.path.splitext(name)[0]}.html"
             docs.append(self.generate_doc(f"docs/{f}", target))
         docs.append(self.generate_doc("README.md", "out/index.html"))
-        await self.run_all(*docs)
+        await asyncio.gather(*docs)
 
     async def generate_doc(self, source, target):
         out = await self.sh(
@@ -1392,7 +1400,7 @@ homebrew or apt-get.
 
 ## install.homebrew
 
-Ensures xcode is installed
+Installs the homebrew package manager
 
 
 
@@ -1406,9 +1414,10 @@ from pitcrew import task
 
 
 class InstallHomebrew(task.BaseTask):
-    """Ensures xcode is installed"""
+    """Installs the homebrew package manager"""
 
     async def verify(self):
+        await self.install.xcode_cli()
         assert await self.sh("which brew")
 
     async def run(self):
@@ -1424,7 +1433,7 @@ class InstallHomebrew(task.BaseTask):
 
 ## install.xcode_cli
 
-Ensures xcode is installed
+Installs xcode cli tools
 
 
 
@@ -1438,7 +1447,7 @@ from pitcrew import task
 
 
 class InstallXcodeCli(task.BaseTask):
-    """Ensures xcode is installed"""
+    """Installs xcode cli tools"""
 
     async def verify(self):
         assert await self.fs.is_directory("/Library/Developer/CommandLineTools")

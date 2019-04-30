@@ -1,8 +1,10 @@
+import os
 import json
 import sys
 import asyncio
 import click
 import argparse
+from subprocess import call
 from pitcrew.app import App
 from pitcrew.util import ResultsPrinter
 
@@ -172,6 +174,16 @@ def new(ctx, task_name):
     app = App()
     app.create_task(task_name)
     print(f"Task created!")
+
+
+@cli.command(short_help="edit a task")
+@click.argument("task_name")
+@click.pass_context
+def edit(ctx, task_name):
+    app = App()
+    task_class = app.loader.populate_task(task_name)
+    editor = os.environ["EDITOR"]
+    call([editor, task_class.source_path()])
 
 
 @cli.command(short_help="show help")

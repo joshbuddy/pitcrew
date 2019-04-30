@@ -1,4 +1,5 @@
 import json
+import asyncio
 from pitcrew import task
 from uuid import uuid4
 
@@ -11,7 +12,7 @@ class DeployPitcrew(task.BaseTask):
         # create the bucket
         await self.sh("aws s3api create-bucket --bucket pitcrew-site")
         # setup aws & build + upload site
-        await self.run_all(self.setup_aws(), self.build_and_sync())
+        await asyncio.gather(self.setup_aws(), self.build_and_sync())
 
     async def setup_aws(self):
         # first find the zone
