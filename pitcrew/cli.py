@@ -125,6 +125,8 @@ def info(ctx, *, task_name):
     task = App().load(task_name)
     print("\033[1mName\033[0m")
     print(task_name)
+    print("\033[1mPath\033[0m")
+    print(task.source_path())
     print("\033[1mDescription\033[0m")
     print(task.__doc__)
     print("\033[1mArguments\033[0m")
@@ -180,10 +182,9 @@ def new(ctx, task_name):
 @click.argument("task_name")
 @click.pass_context
 def edit(ctx, task_name):
-    app = App()
-    task_class = app.loader.populate_task(task_name)
+    task = App().load(task_name)
     editor = os.environ["EDITOR"]
-    call([editor, task_class.source_path()])
+    call([editor, task.source_path()])
 
 
 @cli.command(short_help="show help")
