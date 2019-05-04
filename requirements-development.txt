@@ -1,0 +1,17 @@
+-r requirements.txt
+aiounittest==1.1.0
+appdirs==1.4.3
+attrs==19.1.0
+black==19.3b0
+entrypoints==0.3
+flake8==3.7.7
+livereload==2.6.0
+Markdown==3.1
+mccabe==0.6.1
+mkdocs==1.0.4
+pycodestyle==2.5.0
+pydoc-markdown==2.0.5
+pyflakes==2.1.1
+PyYAML==5.1
+toml==0.10.0
+tornado==6.0.2
