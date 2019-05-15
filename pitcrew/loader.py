@@ -1,6 +1,7 @@
 import inspect
 import os
-import importlib.util
+import importlib
+import pitcrew.tasks
 from pitcrew import task
 from pitcrew.logger import logger
 
@@ -82,7 +83,7 @@ class Loader:
     def populate_task(self, task_name):
         try:
             if task_name not in self.tasks:
-                pkg = importlib.import_module(f"pitcrew.tasks.{task_name}")
+                pkg = importlib.import_module(f".{task_name}", "pitcrew.tasks")
                 c = None
                 tests = []
                 for name, val in pkg.__dict__.items():
