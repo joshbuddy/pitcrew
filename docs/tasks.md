@@ -488,6 +488,8 @@ class DeployPitcrew(task.BaseTask):
     this website using ssl. """
 
     async def run(self):
+        # make sure the build requirements are installed
+        await self.sh("pip install -r requirements-build.txt")
         # create the bucket
         await self.sh("aws s3api create-bucket --bucket pitcrew-site")
         # setup aws & build + upload site
