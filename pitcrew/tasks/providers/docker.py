@@ -7,6 +7,13 @@ class DockerProvider:
         self.container_ids = container_ids
         self.index = 0
 
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        if exc_type:
+            raise exc_value.with_traceback(traceback)
+
     def __aiter__(self):
         return self
 

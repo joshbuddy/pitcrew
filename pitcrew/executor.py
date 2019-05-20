@@ -92,6 +92,7 @@ class Executor:
             pass
 
     async def _start_provider_enquerer(self, fn, *args, **kwargs):
-        async for context in self.provider:
-            await self.queue.put(WorkItem(context, fn, args, kwargs))
-            self._start_worker()
+        async with self.provider:
+            async for context in self.provider:
+                await self.queue.put(WorkItem(context, fn, args, kwargs))
+                self._start_worker()
