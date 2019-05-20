@@ -86,7 +86,8 @@ crew run crew.install --dest="$HOME/crew"
 git clone https://github.com/joshbuddy/pitcrew
 cd pitcrew
 python3.6 -m venv env
-env/bin/pip installer -r requirements.txt
+source env/bin/activate
+pip install -e .
 ```
 
 ## Concepts
