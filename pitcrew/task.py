@@ -20,10 +20,15 @@ with a non-zero status an assertion exception is raised.
 `self.sh_with_code` accepts a command and an optional environment. It returns
 a tuple of (code, stdout, stderr) where stdout and stderr are bytes.
 
+### Writing tasks
+
+New tasks are created through `crew new <task.name>`. Then use `crew edit <task.name>` to
+open the task file in your `$EDITOR`.
+
 ### Lifecycle of a task
 
 Tasks come in two flavors, tasks with verification and tasks without verification.
-All tasks must implement a `run` method.
+Tasks with verification are typically _idempotent_.
 
 If a task has a validate method it performs the following:
 
