@@ -298,6 +298,13 @@ class Argument:
             return value.encode()
         elif self.type == int:
             return int(value)
+        elif self.type == bool:
+            if value.lower() in ["true", "yes", "1"]:
+                return True
+            elif value.lower() in ["false", "no", "0"]:
+                return False
+            else:
+                raise Exception(f"value {value} cannot be converted to bool")
         else:
             return value
 

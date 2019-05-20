@@ -21,7 +21,7 @@ class CrewBuildLinux(task.BaseTask):
             await docker_ctx.apt_get.install("build-essential")
             with docker_ctx.cd("/tmp/crew"):
                 await docker_ctx.sh("python3.6 -m venv --clear env")
-                await docker_ctx.sh("env/bin/pip install -r requirements.txt")
+                await docker_ctx.sh("env/bin/pip install -r requirements-build.txt")
                 await docker_ctx.sh("make build")
                 target = f"pkg/crew-Linux"
                 await docker_ctx.file("/tmp/crew/dist/crew").copy_to(self.file(target))
