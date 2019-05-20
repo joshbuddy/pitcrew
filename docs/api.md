@@ -144,6 +144,13 @@ Context manager to allow changing the current directory within a context
 Context(self, app, loader, user=None, parent_context=None, directory=None)
 ```
 Abstract base class for all contexts.
+### password
+```python
+Context.password(self, prompt) -> str
+```
+Present the user with a password prompt using the prompt given. If two
+identical prompts are supplied, the user is only asked once, and subsequent calls will
+provide the password given.
 ### sh
 ```python
 Context.sh(self, command, stdin=None, env=None) -> str
