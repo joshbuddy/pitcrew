@@ -161,7 +161,8 @@ class BaseTask(ABC):
                 value = arg.process(
                     incoming_kwargs.pop(arg.name, None), self.use_coersion
                 )
-
+            elif arg.required:
+                raise Exception(f"missing argument '{arg.name}'")
             params._set_attr(arg.name, value)
             if value and arg.type == str and not arg.remaining:
                 esc_value = self.esc(value)
