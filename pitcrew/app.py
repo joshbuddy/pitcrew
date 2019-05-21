@@ -8,6 +8,7 @@ from pitcrew.context import LocalContext
 from pitcrew.docs import Docs
 from pitcrew.test import TestRunner
 from pitcrew.executor import Executor
+from pitcrew.passwords import Passwords
 
 
 class App:
@@ -16,6 +17,7 @@ class App:
         atexit.register(self.delete_rendered_templates)
         os.makedirs(self.template_render_path, exist_ok=True)
         self.loader = Loader()
+        self.passwords = Passwords()
         self.local_context = LocalContext(self, self.loader)
 
     def executor(self, *args, **kwargs):

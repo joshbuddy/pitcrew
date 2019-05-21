@@ -40,7 +40,10 @@ class SSHProvider:
 
         tunnel = self.tunnel_contexts[-1].connection if self.tunnel_contexts else None
         ssh_ctx = self.context.ssh_context(
-            host=self.flattened_hosts[self.index], user=self.user, tunnel=tunnel
+            host=self.flattened_hosts[self.index],
+            user=self.user,
+            tunnel=tunnel,
+            **self.connection_args,
         )
         self.index += 1
         return ssh_ctx
@@ -71,6 +74,7 @@ class SSHProvider:
     desc="Specify if forwarding is enabled",
 )
 @task.opt("agent_path", type=str, desc="Specify if forwarding is enabled")
+@task.opt("ask_password", type=str, desc="The prompt to use for asking for a password")
 class ProvidersSsh(task.BaseTask):
     """A provider for ssh contexts"""
 
@@ -78,6 +82,8 @@ class ProvidersSsh(task.BaseTask):
         extra_args = {}
         if self.params.agent_path:
             extra_args["agent_path"] = self.params.agent_path
+        if self.params.ask_password:
+            extra_args["password"] = await self.password(self.params.ask_password)
         return SSHProvider(
             self.context,
             self.params.hosts,

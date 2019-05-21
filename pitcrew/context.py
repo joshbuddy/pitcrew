@@ -80,6 +80,12 @@ class Context(ABC):
     def descriptor(self) -> str:
         pass
 
+    async def password(self, prompt) -> str:
+        """Present the user with a password prompt using the prompt given. If two
+        identical prompts are supplied, the user is only asked once, and subsequent calls will
+        provide the password given."""
+        return await self.app.passwords.get_password(prompt)
+
     async def sh_ok(self, command, stdin=None, env=None) -> bool:
         code, _, _ = await self.sh_with_code(command, stdin=stdin, env=env)
         return code == 0
